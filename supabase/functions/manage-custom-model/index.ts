@@ -89,19 +89,37 @@ serve(async (req) => {
       case 'delete': {
         if (!modelId) throw new Error('Missing modelId');
 
+        // Check if model was active before deletion
+        const { data: model } = await supabaseClient
+          .from('user_models')
+          .select('is_active')
+          .eq('id', modelId)
+          .eq('user_id', user.id)
+          .single();
+
+        const wasActive = model?.is_active;
+
+        // Get photos to delete from storage
         const { data: photos } = await supabaseClient
           .from('model_photos')
           .select('storage_path')
           .eq('model_id', modelId);
 
+        // Delete files from storage
         if (photos && photos.length > 0) {
-          for (const photo of photos) {
-            await supabaseClient.storage
-              .from('model-photos')
-              .remove([photo.storage_path]);
-          }
+          const paths = photos.map(p => p.storage_path);
+          await supabaseClient.storage
+            .from('model-photos')
+            .remove(paths);
         }
 
+        // Delete model_photos records
+        await supabaseClient
+          .from('model_photos')
+          .delete()
+          .eq('model_id', modelId);
+
+        // Delete user_models record
         const { error: deleteError } = await supabaseClient
           .from('user_models')
           .delete()
@@ -110,8 +128,20 @@ serve(async (req) => {
 
         if (deleteError) throw deleteError;
 
+        // If deleted model was active, reset preferences to Emma
+        if (wasActive) {
+          await supabaseClient
+            .from('model_preferences')
+            .upsert({
+              user_id: user.id,
+              selected_model_id: 'emma',
+              photo_style: 'studio',
+              background_type: 'white'
+            });
+        }
+
         return new Response(
-          JSON.stringify({ success: true }),
+          JSON.stringify({ success: true, resetToDefault: wasActive }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }

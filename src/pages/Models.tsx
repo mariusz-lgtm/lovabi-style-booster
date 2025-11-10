@@ -43,19 +43,28 @@ const Models = () => {
       return;
     }
 
-    const customModels = data.map(model => ({
-      id: model.id,
-      name: model.name,
-      photos: model.model_photos
-        .sort((a: any, b: any) => a.photo_order - b.photo_order)
-        .map((p: any) => {
-          const { data: urlData } = supabase.storage
-            .from('model-photos')
-            .getPublicUrl(p.storage_path);
-          return urlData.publicUrl;
-        }),
-      createdAt: model.created_at
-    }));
+    const customModels = await Promise.all(
+      data.map(async (model) => {
+        const sortedPhotos = model.model_photos
+          .sort((a: any, b: any) => a.photo_order - b.photo_order);
+        
+        const photoUrls = await Promise.all(
+          sortedPhotos.map(async (p: any) => {
+            const { data: signedData } = await supabase.storage
+              .from('model-photos')
+              .createSignedUrl(p.storage_path, 3600);
+            return signedData?.signedUrl || '';
+          })
+        );
+
+        return {
+          id: model.id,
+          name: model.name,
+          photos: photoUrls.filter(url => url !== ''),
+          createdAt: model.created_at
+        };
+      })
+    );
 
     setModels(customModels);
   };
@@ -133,10 +142,7 @@ const Models = () => {
 
       toast.success('Model deleted successfully!');
       await fetchModels();
-      
-      if (activeModelId === modelId) {
-        setActiveModelId('emma');
-      }
+      await fetchPreferences();
     } catch (error: any) {
       console.error('Error deleting model:', error);
       toast.error(error.message || 'Failed to delete model');

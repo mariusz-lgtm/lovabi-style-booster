@@ -53,19 +53,28 @@ const PhotoEnhance = () => {
       return;
     }
 
-    const customModels = data.map(model => ({
-      id: model.id,
-      name: model.name,
-      photos: model.model_photos
-        .sort((a: any, b: any) => a.photo_order - b.photo_order)
-        .map((p: any) => {
-          const { data: urlData } = supabase.storage
-            .from('model-photos')
-            .getPublicUrl(p.storage_path);
-          return urlData.publicUrl;
-        }),
-      createdAt: model.created_at
-    }));
+    const customModels = await Promise.all(
+      data.map(async (model) => {
+        const sortedPhotos = model.model_photos
+          .sort((a: any, b: any) => a.photo_order - b.photo_order);
+        
+        const photoUrls = await Promise.all(
+          sortedPhotos.map(async (p: any) => {
+            const { data: signedData } = await supabase.storage
+              .from('model-photos')
+              .createSignedUrl(p.storage_path, 3600);
+            return signedData?.signedUrl || '';
+          })
+        );
+
+        return {
+          id: model.id,
+          name: model.name,
+          photos: photoUrls.filter(url => url !== ''),
+          createdAt: model.created_at
+        };
+      })
+    );
 
     setCustomModels(customModels);
   };
@@ -172,6 +181,19 @@ const PhotoEnhance = () => {
     setSelectedImage(null);
     setEnhancedImage(null);
     setIsLoading(false);
+  };
+
+  const handleDownload = () => {
+    if (!enhancedImage) return;
+    
+    const link = document.createElement('a');
+    link.href = enhancedImage;
+    link.download = `lovabi-${mode}-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success('Image downloaded successfully!');
   };
 
   return (
@@ -311,6 +333,7 @@ const PhotoEnhance = () => {
                       Generate Again
                     </Button>
                     <Button
+                      onClick={handleDownload}
                       size="lg"
                       className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
