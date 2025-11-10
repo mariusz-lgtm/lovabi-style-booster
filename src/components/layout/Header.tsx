@@ -46,6 +46,12 @@ const Header = () => {
               >
                 My Models
               </Link>
+              <Link 
+                to="/history" 
+                className="text-sm font-medium text-foreground-secondary hover:text-foreground transition-colors"
+              >
+                History
+              </Link>
             </div>
             
             {user ? (

@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import PhotoEnhance from "./pages/PhotoEnhance";
 import ListingGenerator from "./pages/ListingGenerator";
 import Models from "./pages/Models";
+import History from "./pages/History";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -45,6 +46,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Models />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/history"
+              element={
+                <ProtectedRoute>
+                  <History />
                 </ProtectedRoute>
               }
             />
