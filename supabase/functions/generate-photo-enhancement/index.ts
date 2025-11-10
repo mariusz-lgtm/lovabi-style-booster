@@ -54,19 +54,21 @@ serve(async (req) => {
     let referenceImages: any[] = [];
 
     if (mode === 'enhance') {
-      prompt = `Task: Enhance the provided image of a garment to meet high-quality professional photography standards while strictly preserving the original look, color, texture, and design of the clothing item.
+      prompt = `Task: Enhance the provided image of a garment to achieve premium, professional product-photography quality while perfectly preserving the garment's original look, color, fabric texture, stitching, and design details.
 
 Required Enhancements:
 
-Wrinkle Removal/Smoothing: Digitally iron the garment, meticulously removing all visible wrinkles, creases, and folds to present a smooth, crisp, and ready-to-wear appearance.
+Wrinkle Removal & Fabric Smoothing: Gently remove all wrinkles, folds, and creases from the garment. Present the clothing as freshly pressed and perfectly shaped, maintaining all natural fabric characteristics and edges.
 
-Lighting and Exposure Correction: Optimize the lighting to achieve a balanced, even, and flattering illumination. Eliminate harsh shadows or overexposed areas. The light source should mimic professional studio soft-box lighting.
+Lighting & Exposure Optimization: Correct lighting to achieve clean, even illumination that mimics a professional studio soft-box setup. Remove any harsh shadows, glare, or underexposed areas for a balanced, natural look.
 
-Color Fidelity and Contrast: Adjust contrast, saturation, and white balance to ensure maximum color fidelity, making the garment's true color and detail pop without looking artificial.
+Color Fidelity & Contrast: Adjust color, contrast, and white balance for true-to-life tones. Ensure the garment's real color, material texture, and fabric weave are accurately represented and vivid, without artificial oversaturation or distortion.
 
-Presentation and Background: Refine the background to be clean, neutral (e.g., pure white, light gray, or a subtly textured studio backdrop), and non-distracting, ensuring the clothing is the sole focal point.
+Background Refinement: Replace or clean up the background to a pure white seamless backdrop (RGB 255,255,255). The background must be smooth, uniform, and non-distracting, ensuring the garment is the only focal point.
 
-Goal: Transform the image into a high-end, e-commerce-ready product photograph suitable for professional catalogs and online retail.`;
+Detail Preservation: Maintain every small stitching detail, button, tag, label, and texture exactly as in the original photo — no visual alteration of the design or structure of the clothing.
+
+Goal: Deliver a high-end, e-commerce-ready product image suitable for use in online stores, fashion catalogs, and professional retail listings — sharp, clean, and realistic with flawless presentation.`;
     } else if (mode === 'virtual-tryon') {
       const isCustomModel = modelId && modelId.length === 36;
 
@@ -105,8 +107,48 @@ Goal: Transform the image into a high-end, e-commerce-ready product photograph s
       }
 
       const stylePrompts = {
-        studio: `Professional fashion photography of a woman wearing the clothing item shown. Style: Studio photoshoot with professional lighting setup. Background: ${backgroundType === 'white' ? 'Pure white seamless backdrop' : backgroundType === 'studio-grey' ? 'Neutral grey studio backdrop' : backgroundType === 'outdoor' ? 'Natural outdoor setting with soft daylight' : 'Modern home interior with natural lighting'}. Camera: High-end DSLR, 85mm lens, shallow depth of field (f/2.8). Lighting: Three-point lighting with soft key light from 45 degrees, fill light, and rim light for separation. Model pose: Confident, natural stance showcasing the garment. Post-processing: Professional retouching, commercial color grading, crisp details. Quality: Editorial fashion magazine standard, 4K resolution. ${isCustomModel ? 'Use the reference images provided to match the model appearance.' : ''}`,
-        selfie: `Casual selfie-style photo of a young woman wearing the clothing item shown. Style: Natural indoor lighting, smartphone camera aesthetic. Background: ${backgroundType === 'white' ? 'Clean white wall' : backgroundType === 'home-interior' ? 'Cozy home interior (bedroom or living room)' : backgroundType === 'outdoor' ? 'Casual outdoor setting (park or street)' : 'Simple neutral background'}. Camera: Smartphone camera quality, slight wide angle, natural color tone. Pose: Relaxed, authentic mirror selfie or arm-extended selfie angle. Mood: Approachable, relatable, Instagram-style. Quality: Natural smartphone photo with slight enhancement, warm color tone. ${isCustomModel ? 'Match the model appearance from the reference images provided.' : ''}`
+        studio: `Ultra-realistic professional fashion photography of a woman wearing exactly the same clothing item as shown in the reference image — every fabric detail, texture, and color must be perfectly matched and faithfully reproduced.
+
+Style: High-end studio photoshoot with professional lighting and realistic skin tones.
+
+Background (depends on backgroundType):
+${backgroundType === 'white' ? '"white" → Pure white seamless backdrop for e-commerce look.' : ''}
+${backgroundType === 'studio-grey' ? '"studio-grey" → Smooth neutral grey studio backdrop for balanced tones.' : ''}
+${backgroundType === 'outdoor' ? '"outdoor" → Natural outdoor setting with soft daylight, realistic shadows.' : ''}
+${backgroundType === 'home-interior' ? '"home-interior" → Modern home interior with natural window light, cozy atmosphere.' : ''}
+
+Camera: Shot on a full-frame DSLR with 85mm portrait lens, aperture f/2.8 for shallow depth of field and crisp garment focus.
+
+Lighting: Three-point professional studio lighting — soft key light at 45°, gentle fill light, and subtle rim light for separation and dimension.
+
+Model pose: Confident, relaxed posture naturally showcasing the clothing fit, fabric flow, and texture.
+
+Post-processing: Commercial-grade retouching and color grading; clean tones, realistic contrast, and ultra-sharp fabric details.
+
+Quality: Editorial fashion magazine level, 4K ultra high-resolution, perfect clarity.
+
+${isCustomModel ? 'Use the provided reference images to accurately match the model\'s face, body proportions, and appearance.' : ''}`,
+        selfie: `Realistic mirror selfie photo of a young woman wearing exactly the same clothing item as shown in the reference image — all colors, textures, and garment details must be perfectly accurate and true to life.
+
+Style: Casual, authentic mirror-selfie aesthetic captured indoors with natural lighting.
+
+Background (depends on backgroundType):
+${backgroundType === 'white' ? '"white" → Clean white wall or minimalist mirror reflection.' : ''}
+${backgroundType === 'home-interior' ? '"home-interior" → Cozy bedroom or stylish living room with soft daylight.' : ''}
+${backgroundType === 'outdoor' ? '"outdoor" → Mirror placed outdoors (e.g. garden or street), casual fashion vibe.' : ''}
+${!backgroundType || (backgroundType !== 'white' && backgroundType !== 'home-interior' && backgroundType !== 'outdoor') ? 'default → Simple, neutral mirror background with realistic reflections.' : ''}
+
+Camera: Smartphone front or main camera, realistic mirror reflection, slight wide-angle lens, handheld framing, natural exposure and tones.
+
+Pose: Natural mirror selfie stance — one hand holding the phone, relaxed posture, showing full outfit fit and texture clearly.
+
+Mood: Approachable, authentic, Instagram / Vinted aesthetic; spontaneous but flattering composition.
+
+Post-processing: Light smartphone-style enhancement — gentle contrast, warm tones, sharp details of the clothing.
+
+Quality: High-resolution realistic photo (4K), subtle reflections, true-to-life lighting and proportions.
+
+${isCustomModel ? 'Use the reference images to precisely match the model\'s face, hair, and body proportions for full consistency.' : ''}`
       };
 
       prompt = stylePrompts[photoStyle as keyof typeof stylePrompts] || stylePrompts.studio;
