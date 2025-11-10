@@ -54,7 +54,19 @@ serve(async (req) => {
     let referenceImages: any[] = [];
 
     if (mode === 'enhance') {
-      prompt = `Professional product photography enhancement. Improve lighting, clarity, and remove any distractions. Maintain the original item's appearance and colors. Apply professional color grading and sharpening. Result should look like a high-quality e-commerce product photo.`;
+      prompt = `Task: Enhance the provided image of a garment to meet high-quality professional photography standards while strictly preserving the original look, color, texture, and design of the clothing item.
+
+Required Enhancements:
+
+Wrinkle Removal/Smoothing: Digitally iron the garment, meticulously removing all visible wrinkles, creases, and folds to present a smooth, crisp, and ready-to-wear appearance.
+
+Lighting and Exposure Correction: Optimize the lighting to achieve a balanced, even, and flattering illumination. Eliminate harsh shadows or overexposed areas. The light source should mimic professional studio soft-box lighting.
+
+Color Fidelity and Contrast: Adjust contrast, saturation, and white balance to ensure maximum color fidelity, making the garment's true color and detail pop without looking artificial.
+
+Presentation and Background: Refine the background to be clean, neutral (e.g., pure white, light gray, or a subtly textured studio backdrop), and non-distracting, ensuring the clothing is the sole focal point.
+
+Goal: Transform the image into a high-end, e-commerce-ready product photograph suitable for professional catalogs and online retail.`;
     } else if (mode === 'virtual-tryon') {
       const isCustomModel = modelId && modelId.length === 36;
 
