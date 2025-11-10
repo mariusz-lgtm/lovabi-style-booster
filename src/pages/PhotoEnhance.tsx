@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload, Sparkles, Download, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Header from "@/components/layout/Header";
 import { toast } from "sonner";
 import ModeSelector from "@/components/photo/ModeSelector";
+import ModelSelector from "@/components/photo/ModelSelector";
+import PhotoStyleSelector from "@/components/photo/PhotoStyleSelector";
 import ImageComparison from "@/components/photo/ImageComparison";
 import LoadingState from "@/components/photo/LoadingState";
+import { getCustomModels, getModelPreferences, saveModelPreferences } from "@/lib/mockModels";
+import { CustomModel, PhotoStyle } from "@/types/models";
 
 const PhotoEnhance = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -14,6 +18,20 @@ const PhotoEnhance = () => {
   const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
   const [mode, setMode] = useState<"enhance" | "virtual-tryon">("enhance");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState("emma");
+  const [photoStyle, setPhotoStyle] = useState<PhotoStyle>("studio");
+  const [customModels, setCustomModels] = useState<CustomModel[]>([]);
+
+  useEffect(() => {
+    setCustomModels(getCustomModels());
+    const prefs = getModelPreferences();
+    setSelectedModelId(prefs.selectedModelId);
+    setPhotoStyle(prefs.photoStyle);
+  }, []);
+
+  useEffect(() => {
+    saveModelPreferences({ selectedModelId, photoStyle });
+  }, [selectedModelId, photoStyle]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -46,16 +64,26 @@ const PhotoEnhance = () => {
 
   const handleProcess = () => {
     setIsLoading(true);
-    // Simulate processing - will be connected to backend later
+    
+    // Mock: simulate different processing times
+    const processingTime = mode === "virtual-tryon" && customModels.length > 0 
+      ? 3000  // custom models "take longer"
+      : 2000;
+    
     setTimeout(() => {
       setIsLoading(false);
       setEnhancedImage(selectedImage); // Placeholder - will be replaced with AI result
-      toast.success(
-        mode === "enhance" 
-          ? "Photo enhanced! (Demo - backend integration coming next)" 
-          : "Virtual try-on created! (Demo - backend integration coming next)"
-      );
-    }, 2000);
+      
+      if (mode === "enhance") {
+        toast.success("Photo enhanced! (Demo - backend integration coming next)");
+      } else {
+        const modelName = customModels.find(m => m.id === selectedModelId)?.name 
+          || selectedModelId.charAt(0).toUpperCase() + selectedModelId.slice(1);
+        toast.success(
+          `Virtual try-on created with ${modelName} in ${photoStyle} style! (Demo)`
+        );
+      }
+    }, processingTime);
   };
 
   const handleReset = () => {
@@ -124,6 +152,21 @@ const PhotoEnhance = () => {
               <div className="max-w-md mx-auto mb-6">
                 <ModeSelector mode={mode} onModeChange={setMode} />
               </div>
+
+              {/* Model and style selectors for virtual try-on */}
+              {mode === "virtual-tryon" && (
+                <div className="space-y-4 mb-6">
+                  <ModelSelector
+                    selectedModelId={selectedModelId}
+                    onModelSelect={setSelectedModelId}
+                    customModels={customModels}
+                  />
+                  <PhotoStyleSelector
+                    selectedStyle={photoStyle}
+                    onStyleChange={setPhotoStyle}
+                  />
+                </div>
+              )}
 
               {/* Image comparison or loading state */}
               {isLoading ? (
