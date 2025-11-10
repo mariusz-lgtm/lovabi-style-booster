@@ -7,10 +7,11 @@ import { toast } from "sonner";
 import ModeSelector from "@/components/photo/ModeSelector";
 import ModelSelector from "@/components/photo/ModelSelector";
 import PhotoStyleSelector from "@/components/photo/PhotoStyleSelector";
+import BackgroundSelector from "@/components/photo/BackgroundSelector";
 import ImageComparison from "@/components/photo/ImageComparison";
 import LoadingState from "@/components/photo/LoadingState";
 import { getCustomModels, getModelPreferences, saveModelPreferences } from "@/lib/mockModels";
-import { CustomModel, PhotoStyle } from "@/types/models";
+import { CustomModel, PhotoStyle, BackgroundType } from "@/types/models";
 
 const PhotoEnhance = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -20,6 +21,7 @@ const PhotoEnhance = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState("emma");
   const [photoStyle, setPhotoStyle] = useState<PhotoStyle>("studio");
+  const [backgroundType, setBackgroundType] = useState<BackgroundType>("white");
   const [customModels, setCustomModels] = useState<CustomModel[]>([]);
 
   useEffect(() => {
@@ -27,11 +29,12 @@ const PhotoEnhance = () => {
     const prefs = getModelPreferences();
     setSelectedModelId(prefs.selectedModelId);
     setPhotoStyle(prefs.photoStyle);
+    setBackgroundType(prefs.backgroundType || "white");
   }, []);
 
   useEffect(() => {
-    saveModelPreferences({ selectedModelId, photoStyle });
-  }, [selectedModelId, photoStyle]);
+    saveModelPreferences({ selectedModelId, photoStyle, backgroundType });
+  }, [selectedModelId, photoStyle, backgroundType]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -79,8 +82,10 @@ const PhotoEnhance = () => {
       } else {
         const modelName = customModels.find(m => m.id === selectedModelId)?.name 
           || selectedModelId.charAt(0).toUpperCase() + selectedModelId.slice(1);
+        const isCustomModel = selectedModelId.startsWith("custom_");
+        const bgText = isCustomModel ? ` with ${backgroundType} background` : "";
         toast.success(
-          `Virtual try-on created with ${modelName} in ${photoStyle} style! (Demo)`
+          `Virtual try-on created with ${modelName} in ${photoStyle} style${bgText}! (Demo)`
         );
       }
     }, processingTime);
@@ -165,6 +170,12 @@ const PhotoEnhance = () => {
                     selectedStyle={photoStyle}
                     onStyleChange={setPhotoStyle}
                   />
+                  {selectedModelId.startsWith("custom_") && (
+                    <BackgroundSelector
+                      selectedBackground={backgroundType}
+                      onBackgroundChange={setBackgroundType}
+                    />
+                  )}
                 </div>
               )}
 

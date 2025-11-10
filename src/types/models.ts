@@ -15,7 +15,10 @@ export interface CustomModel {
 
 export type PhotoStyle = "selfie" | "studio";
 
+export type BackgroundType = "white" | "outdoor" | "studio-grey" | "home-interior";
+
 export interface ModelPreferences {
   selectedModelId: string;
   photoStyle: PhotoStyle;
+  backgroundType?: BackgroundType;
 }

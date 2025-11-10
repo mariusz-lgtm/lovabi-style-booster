@@ -66,7 +66,8 @@ export const getModelPreferences = (): ModelPreferences => {
   const stored = localStorage.getItem(STORAGE_KEYS.PREFERENCES);
   return stored ? JSON.parse(stored) : {
     selectedModelId: "emma",
-    photoStyle: "studio"
+    photoStyle: "studio",
+    backgroundType: "white"
   };
 };
 
