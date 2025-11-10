@@ -1,13 +1,19 @@
 import { useState } from "react";
-import { Upload, Sparkles, Download } from "lucide-react";
+import { Upload, Sparkles, Download, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Header from "@/components/layout/Header";
 import { toast } from "sonner";
+import ModeSelector from "@/components/photo/ModeSelector";
+import ImageComparison from "@/components/photo/ImageComparison";
+import LoadingState from "@/components/photo/LoadingState";
 
 const PhotoEnhance = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
+  const [mode, setMode] = useState<"enhance" | "virtual-tryon">("enhance");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -38,8 +44,24 @@ const PhotoEnhance = () => {
     }
   };
 
-  const handleEnhance = () => {
-    toast.success("Photo enhanced! This will connect to AI in the next version.");
+  const handleProcess = () => {
+    setIsLoading(true);
+    // Simulate processing - will be connected to backend later
+    setTimeout(() => {
+      setIsLoading(false);
+      setEnhancedImage(selectedImage); // Placeholder - will be replaced with AI result
+      toast.success(
+        mode === "enhance" 
+          ? "Photo enhanced! (Demo - backend integration coming next)" 
+          : "Virtual try-on created! (Demo - backend integration coming next)"
+      );
+    }, 2000);
+  };
+
+  const handleReset = () => {
+    setSelectedImage(null);
+    setEnhancedImage(null);
+    setIsLoading(false);
   };
 
   return (
@@ -47,13 +69,20 @@ const PhotoEnhance = () => {
       <Header />
       <main className="container mx-auto px-6 lg:px-8 py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h1 className="text-4xl lg:text-5xl font-bold font-heading text-foreground mb-4">
-              Enhance Your Photos
+              {mode === "enhance" ? "Enhance Your Photos" : "Dress on Model"}
             </h1>
-            <p className="text-lg text-foreground-secondary">
-              Upload your fashion item and we'll make it shine
+            <p className="text-lg text-foreground-secondary mb-6">
+              {mode === "enhance" 
+                ? "Upload your fashion item and we'll make it shine"
+                : "See how your item looks on a professional model"}
             </p>
+            {!selectedImage && (
+              <div className="max-w-md mx-auto">
+                <ModeSelector mode={mode} onModeChange={setMode} />
+              </div>
+            )}
           </div>
 
           {!selectedImage ? (
@@ -91,31 +120,74 @@ const PhotoEnhance = () => {
             </Card>
           ) : (
             <div className="space-y-6">
-              <Card className="p-6 bg-card shadow-medium">
-                <img
-                  src={selectedImage}
-                  alt="Selected item"
-                  className="w-full h-auto rounded-lg"
+              {/* Mode selector when image is selected */}
+              <div className="max-w-md mx-auto mb-6">
+                <ModeSelector mode={mode} onModeChange={setMode} />
+              </div>
+
+              {/* Image comparison or loading state */}
+              {isLoading ? (
+                <LoadingState mode={mode} />
+              ) : (
+                <ImageComparison 
+                  originalImage={selectedImage} 
+                  enhancedImage={enhancedImage}
+                  mode={mode}
                 />
-              </Card>
+              )}
               
+              {/* Action buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  onClick={handleEnhance}
-                  size="lg"
-                  className="gap-2 bg-primary hover:bg-primary-hover text-primary-foreground transition-all hover:scale-105"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  Enhance Photo
-                </Button>
-                <Button
-                  onClick={() => setSelectedImage(null)}
-                  variant="outline"
-                  size="lg"
-                  className="border-border hover:bg-secondary"
-                >
-                  Choose Different Photo
-                </Button>
+                {!enhancedImage ? (
+                  <>
+                    <Button
+                      onClick={handleProcess}
+                      size="lg"
+                      disabled={isLoading}
+                      className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-105"
+                    >
+                      <Sparkles className="w-5 h-5" />
+                      {mode === "enhance" ? "Enhance Photo" : "Dress on Model"}
+                    </Button>
+                    <Button
+                      onClick={handleReset}
+                      variant="outline"
+                      size="lg"
+                      disabled={isLoading}
+                      className="border-border hover:bg-secondary"
+                    >
+                      Choose Different Photo
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={handleReset}
+                      size="lg"
+                      variant="outline"
+                      className="gap-2 border-border hover:bg-secondary"
+                    >
+                      <RotateCcw className="w-5 h-5" />
+                      Start Over
+                    </Button>
+                    <Button
+                      onClick={handleProcess}
+                      size="lg"
+                      variant="outline"
+                      className="gap-2 border-border hover:bg-secondary"
+                    >
+                      <Sparkles className="w-5 h-5" />
+                      Generate Again
+                    </Button>
+                    <Button
+                      size="lg"
+                      className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+                    >
+                      <Download className="w-5 h-5" />
+                      Download
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           )}
