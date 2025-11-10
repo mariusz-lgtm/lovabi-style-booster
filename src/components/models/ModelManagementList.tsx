@@ -1,7 +1,8 @@
-import { Trash2, Star } from "lucide-react";
+import { Trash2, Star, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { CustomModel } from "@/types/models";
 
 interface ModelManagementListProps {
@@ -59,9 +60,36 @@ const ModelManagementList = ({
                 <h3 className="font-heading font-semibold text-lg text-foreground mb-1">
                   {model.name}
                 </h3>
-                <Badge variant="secondary" className="text-xs">
-                  {model.photos.length} photo{model.photos.length > 1 ? "s" : ""}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {model.photos.length} photo{model.photos.length > 1 ? "s" : ""}
+                  </Badge>
+                  {model.photos.length > 1 && (
+                    <HoverCard openDelay={200}>
+                      <HoverCardTrigger asChild>
+                        <button 
+                          className="text-foreground-secondary hover:text-primary transition-colors p-1 rounded-sm hover:bg-secondary/50"
+                          aria-label="Preview all photos"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </HoverCardTrigger>
+                      <HoverCardContent side="right" align="start" className="w-80 p-4">
+                        <p className="text-sm font-medium text-foreground mb-3">All Photos:</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {model.photos.map((photo, idx) => (
+                            <img
+                              key={idx}
+                              src={photo}
+                              alt={`${model.name} ${idx + 1}`}
+                              className="w-full aspect-square object-cover rounded border border-border"
+                            />
+                          ))}
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -87,22 +115,6 @@ const ModelManagementList = ({
               </div>
             </div>
 
-            {/* Preview other photos on hover */}
-            {model.photos.length > 1 && (
-              <div className="absolute inset-0 bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity p-4 rounded-lg">
-                <p className="text-sm font-medium text-foreground mb-2">All Photos:</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {model.photos.map((photo, idx) => (
-                    <img
-                      key={idx}
-                      src={photo}
-                      alt={`${model.name} ${idx + 1}`}
-                      className="w-full aspect-square object-cover rounded"
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
           </Card>
         );
       })}
