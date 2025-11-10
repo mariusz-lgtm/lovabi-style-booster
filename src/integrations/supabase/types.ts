@@ -14,13 +14,187 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      generation_history: {
+        Row: {
+          background_used: string | null
+          created_at: string | null
+          generation_time_ms: number | null
+          id: string
+          input_image_path: string | null
+          model_used: string
+          output_image_path: string | null
+          style_used: string
+          user_id: string
+        }
+        Insert: {
+          background_used?: string | null
+          created_at?: string | null
+          generation_time_ms?: number | null
+          id?: string
+          input_image_path?: string | null
+          model_used: string
+          output_image_path?: string | null
+          style_used: string
+          user_id: string
+        }
+        Update: {
+          background_used?: string | null
+          created_at?: string | null
+          generation_time_ms?: number | null
+          id?: string
+          input_image_path?: string | null
+          model_used?: string
+          output_image_path?: string | null
+          style_used?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      model_photos: {
+        Row: {
+          id: string
+          model_id: string
+          photo_order: number
+          storage_path: string
+          uploaded_at: string | null
+        }
+        Insert: {
+          id?: string
+          model_id: string
+          photo_order: number
+          storage_path: string
+          uploaded_at?: string | null
+        }
+        Update: {
+          id?: string
+          model_id?: string
+          photo_order?: number
+          storage_path?: string
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_photos_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "user_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      model_preferences: {
+        Row: {
+          background_type: string | null
+          photo_style: string
+          selected_model_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          background_type?: string | null
+          photo_style: string
+          selected_model_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          background_type?: string | null
+          photo_style?: string
+          selected_model_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_models: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_models_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_active_model: {
+        Args: { p_user_id: string }
+        Returns: {
+          model_id: string
+          model_name: string
+          photo_paths: string[]
+        }[]
+      }
+      set_active_model: {
+        Args: { p_model_id: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

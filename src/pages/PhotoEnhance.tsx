@@ -10,10 +10,15 @@ import PhotoStyleSelector from "@/components/photo/PhotoStyleSelector";
 import BackgroundSelector from "@/components/photo/BackgroundSelector";
 import ImageComparison from "@/components/photo/ImageComparison";
 import LoadingState from "@/components/photo/LoadingState";
-import { getCustomModels, getModelPreferences, saveModelPreferences } from "@/lib/mockModels";
 import { CustomModel, PhotoStyle, BackgroundType } from "@/types/models";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMigrateLocalStorage } from "@/hooks/useMigrateLocalStorage";
 
 const PhotoEnhance = () => {
+  const { session, user } = useAuth();
+  useMigrateLocalStorage();
+  
   const [isDragging, setIsDragging] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
@@ -25,16 +30,72 @@ const PhotoEnhance = () => {
   const [customModels, setCustomModels] = useState<CustomModel[]>([]);
 
   useEffect(() => {
-    setCustomModels(getCustomModels());
-    const prefs = getModelPreferences();
-    setSelectedModelId(prefs.selectedModelId);
-    setPhotoStyle(prefs.photoStyle);
-    setBackgroundType(prefs.backgroundType || "white");
-  }, []);
+    if (user) {
+      fetchModels();
+      fetchPreferences();
+    }
+  }, [user]);
+
+  const fetchModels = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('user_models')
+      .select(`
+        *,
+        model_photos (*)
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching models:', error);
+      return;
+    }
+
+    const customModels = data.map(model => ({
+      id: model.id,
+      name: model.name,
+      photos: model.model_photos
+        .sort((a: any, b: any) => a.photo_order - b.photo_order)
+        .map((p: any) => {
+          const { data: urlData } = supabase.storage
+            .from('model-photos')
+            .getPublicUrl(p.storage_path);
+          return urlData.publicUrl;
+        }),
+      createdAt: model.created_at
+    }));
+
+    setCustomModels(customModels);
+  };
+
+  const fetchPreferences = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('model_preferences')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (data) {
+      setSelectedModelId(data.selected_model_id);
+      setPhotoStyle(data.photo_style as PhotoStyle);
+      setBackgroundType((data.background_type as BackgroundType) || "white");
+    }
+  };
 
   useEffect(() => {
-    saveModelPreferences({ selectedModelId, photoStyle, backgroundType });
-  }, [selectedModelId, photoStyle, backgroundType]);
+    if (user) {
+      supabase.from('model_preferences').upsert({
+        user_id: user.id,
+        selected_model_id: selectedModelId,
+        photo_style: photoStyle,
+        background_type: backgroundType
+      });
+    }
+  }, [selectedModelId, photoStyle, backgroundType, user]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -65,30 +126,46 @@ const PhotoEnhance = () => {
     }
   };
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
+    if (!selectedImage || !session) {
+      toast.error('Please select an image and make sure you are logged in');
+      return;
+    }
+
     setIsLoading(true);
-    
-    // Mock: simulate different processing times
-    const processingTime = mode === "virtual-tryon" && customModels.length > 0 
-      ? 3000  // custom models "take longer"
-      : 2000;
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      setEnhancedImage(selectedImage); // Placeholder - will be replaced with AI result
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-photo-enhancement', {
+        body: {
+          imageBase64: selectedImage,
+          mode,
+          modelId: mode === 'virtual-tryon' ? selectedModelId : undefined,
+          photoStyle: mode === 'virtual-tryon' ? photoStyle : undefined,
+          backgroundType: mode === 'virtual-tryon' && selectedModelId.length === 36
+            ? backgroundType 
+            : undefined
+        }
+      });
+
+      if (error) throw error;
+
+      setEnhancedImage(data.imageUrl);
       
-      if (mode === "enhance") {
-        toast.success("Photo enhanced! (Demo - backend integration coming next)");
-      } else {
-        const modelName = customModels.find(m => m.id === selectedModelId)?.name 
-          || selectedModelId.charAt(0).toUpperCase() + selectedModelId.slice(1);
-        const isCustomModel = selectedModelId.startsWith("custom_");
-        const bgText = isCustomModel ? ` with ${backgroundType} background` : "";
-        toast.success(
-          `Virtual try-on created with ${modelName} in ${photoStyle} style${bgText}! (Demo)`
-        );
-      }
-    }, processingTime);
+      const modelName = customModels.find(m => m.id === selectedModelId)?.name 
+        || selectedModelId.charAt(0).toUpperCase() + selectedModelId.slice(1);
+      const message = mode === 'enhance'
+        ? 'Photo enhanced successfully!'
+        : `Virtual try-on created with ${modelName} in ${photoStyle} style${
+            backgroundType && selectedModelId.length === 36 ? ` on ${backgroundType} background` : ''
+          }!`;
+      
+      toast.success(message);
+    } catch (error: any) {
+      console.error('Error processing image:', error);
+      toast.error(error.message || 'Failed to process image');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleReset = () => {
