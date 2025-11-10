@@ -87,7 +87,14 @@ Goal: Transform the image into a high-end, e-commerce-ready product photograph s
 
             if (imageData) {
               const arrayBuffer = await imageData.arrayBuffer();
-              const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+              const bytes = new Uint8Array(arrayBuffer);
+              let binary = '';
+              const chunkSize = 8192;
+              for (let i = 0; i < bytes.length; i += chunkSize) {
+                const chunk = bytes.subarray(i, i + chunkSize);
+                binary += String.fromCharCode.apply(null, Array.from(chunk));
+              }
+              const base64 = btoa(binary);
               referenceImages.push({
                 type: "image_url",
                 image_url: { url: `data:image/jpeg;base64,${base64}` }
