@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Upload, Sparkles, Download, RotateCcw } from "lucide-react";
+import { Upload, Camera, Sparkles, Download, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Header from "@/components/layout/Header";
@@ -11,6 +11,7 @@ import BackgroundSelector from "@/components/photo/BackgroundSelector";
 import SelectedModelPreview from "@/components/photo/SelectedModelPreview";
 import ImageComparison from "@/components/photo/ImageComparison";
 import LoadingState from "@/components/photo/LoadingState";
+import { CameraPreviewDialog } from "@/components/photo/CameraPreviewDialog";
 import { CustomModel, PhotoStyle, BackgroundType } from "@/types/models";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +30,7 @@ const PhotoEnhance = () => {
   const [photoStyle, setPhotoStyle] = useState<PhotoStyle>("studio");
   const [backgroundType, setBackgroundType] = useState<BackgroundType>("white");
   const [customModels, setCustomModels] = useState<CustomModel[]>([]);
+  const [cameraPreview, setCameraPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -136,6 +138,30 @@ const PhotoEnhance = () => {
     }
   };
 
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setCameraPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
+
+  const handleAcceptPhoto = () => {
+    setSelectedImage(cameraPreview);
+    setCameraPreview(null);
+  };
+
+  const handleRetake = () => {
+    setCameraPreview(null);
+    setTimeout(() => {
+      document.getElementById('camera-input')?.click();
+    }, 100);
+  };
+
   const handleProcess = async () => {
     if (!selectedImage || !session) {
       toast.error('Please select an image and make sure you are logged in');
@@ -227,27 +253,61 @@ const PhotoEnhance = () => {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <label className="cursor-pointer block p-16">
+              <div className="p-16">
                 <input
+                  id="file-input"
                   type="file"
                   accept="image/*"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
+                <input
+                  id="camera-input"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleCameraCapture}
+                  className="hidden"
+                />
+                
                 <div className="flex flex-col items-center justify-center space-y-4">
                   <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
                     <Upload className="w-8 h-8 text-primary" />
                   </div>
+                  
                   <div className="text-center">
-                    <p className="text-lg font-medium text-foreground mb-2">
-                      Drop your photo here, or click to browse
+                    <p className="text-lg font-medium text-foreground mb-4">
+                      Upload or capture your photo
                     </p>
-                    <p className="text-sm text-foreground-secondary">
+                    
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('file-input')?.click()}
+                        className="gap-2"
+                      >
+                        <Upload className="w-4 h-4" />
+                        Browse Files
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        variant="default"
+                        onClick={() => document.getElementById('camera-input')?.click()}
+                        className="gap-2"
+                      >
+                        <Camera className="w-4 h-4" />
+                        Take Photo
+                      </Button>
+                    </div>
+                    
+                    <p className="text-sm text-foreground-secondary mt-4">
                       PNG, JPG, WEBP up to 10MB
                     </p>
                   </div>
                 </div>
-              </label>
+              </div>
             </Card>
           ) : (
             <div className="space-y-6">
@@ -347,6 +407,14 @@ const PhotoEnhance = () => {
                 )}
               </div>
             </div>
+          )}
+          
+          {cameraPreview && (
+            <CameraPreviewDialog
+              imagePreview={cameraPreview}
+              onAccept={handleAcceptPhoto}
+              onRetake={handleRetake}
+            />
           )}
         </div>
       </main>
