@@ -150,7 +150,14 @@ Post-processing: Commercial-grade retouching and color grading; clean tones, rea
 
 Format & Quality: Perfect square composition (1:1 aspect ratio), 1536×1536 pixels resolution. Editorial fashion magazine level — ultra high-resolution with perfect clarity, balanced framing with the model centered naturally in the frame.
 
-${isCustomModel ? 'Use the provided reference images to accurately match the model\'s face, body proportions, and appearance.' : ''}`,
+${isCustomModel ? `CRITICAL: Use the provided reference images to EXACTLY replicate the model's physical characteristics:
+- Body type and figure (petite, curvy, athletic, plus-size, etc.) — match precisely
+- Height proportions and body frame — maintain the exact silhouette
+- Shoulder width, waist, hips, leg length — keep all proportions identical
+- Skin tone, facial features, hair style and color — reproduce faithfully
+- Overall size and build — NO idealization or modification
+
+The generated model MUST look like the same person from the reference photos with the same body type and proportions. Do not create a generic model.` : ''}`,
         selfie: `Realistic mirror selfie photo of a young woman wearing exactly the same clothing item as shown in the reference image — all colors, textures, and garment details must be perfectly accurate and true to life.
 
 Style: Casual, authentic mirror-selfie aesthetic captured indoors with natural lighting.
@@ -171,7 +178,14 @@ Post-processing: Light smartphone-style enhancement — gentle contrast, warm to
 
 Format & Quality: Square mirror selfie composition (1:1 aspect ratio), 1536×1536 pixels resolution. High-resolution realistic photo with subtle mirror reflections, true-to-life lighting and proportions, balanced framing showing the full outfit clearly.
 
-${isCustomModel ? 'Use the reference images to precisely match the model\'s face, hair, and body proportions for full consistency.' : ''}`
+${isCustomModel ? `CRITICAL: The model in the selfie must be the EXACT same person from the reference images:
+- Match the body type, size, and figure precisely (petite, curvy, athletic, plus-size, etc.)
+- Replicate height proportions, body frame, and silhouette exactly
+- Keep facial features, skin tone, hair, and physical build identical
+- Maintain shoulder width, waist, hips, and leg proportions from reference photos
+- NO modifications, idealization, or changes to the model's appearance
+
+This must look like a real selfie of the person in the reference photos wearing the garment — authentic body type and realistic proportions are mandatory.` : ''}`
       };
 
       prompt = stylePrompts[photoStyle as keyof typeof stylePrompts] || stylePrompts.studio;
