@@ -1,25 +1,28 @@
 import { PredefinedModel, CustomModel, ModelPreferences } from "@/types/models";
+import emmaImage from "@/assets/model-emma.jpg";
+import sofiaImage from "@/assets/model-sofia.jpg";
+import mayaImage from "@/assets/model-maya.jpg";
 
 export const PREDEFINED_MODELS: PredefinedModel[] = [
   {
     id: "emma",
     name: "Emma",
     description: "Professional European model",
-    imageUrl: "/placeholder.svg",
+    imageUrl: emmaImage,
     style: "elegant"
   },
   {
     id: "sofia",
     name: "Sofia",
     description: "Modern Mediterranean model",
-    imageUrl: "/placeholder.svg",
+    imageUrl: sofiaImage,
     style: "contemporary"
   },
   {
     id: "maya",
     name: "Maya",
     description: "Trendy street style model",
-    imageUrl: "/placeholder.svg",
+    imageUrl: mayaImage,
     style: "casual"
   }
 ];

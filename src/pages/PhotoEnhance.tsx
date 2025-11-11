@@ -8,6 +8,7 @@ import ModeSelector from "@/components/photo/ModeSelector";
 import ModelSelector from "@/components/photo/ModelSelector";
 import PhotoStyleSelector from "@/components/photo/PhotoStyleSelector";
 import BackgroundSelector from "@/components/photo/BackgroundSelector";
+import SelectedModelPreview from "@/components/photo/SelectedModelPreview";
 import ImageComparison from "@/components/photo/ImageComparison";
 import LoadingState from "@/components/photo/LoadingState";
 import { CustomModel, PhotoStyle, BackgroundType } from "@/types/models";
@@ -265,11 +266,15 @@ const PhotoEnhance = () => {
                     onModelSelect={setSelectedModelId}
                     customModels={customModels}
                   />
+                  <SelectedModelPreview 
+                    selectedModelId={selectedModelId}
+                    customModels={customModels}
+                  />
                   <PhotoStyleSelector
                     selectedStyle={photoStyle}
                     onStyleChange={setPhotoStyle}
                   />
-                  {selectedModelId.startsWith("custom_") && (
+                  {mode === "virtual-tryon" && (
                     <BackgroundSelector
                       selectedBackground={backgroundType}
                       onBackgroundChange={setBackgroundType}
