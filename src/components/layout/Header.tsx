@@ -27,32 +27,34 @@ const Header = () => {
           </Link>
           
           <nav className="flex items-center space-x-8">
-            <div className="hidden md:flex items-center space-x-8">
-              <Link 
-                to="/enhance" 
-                className="text-sm font-medium text-foreground-secondary hover:text-foreground transition-colors"
-              >
-                Photo Enhancer
-              </Link>
-              <Link 
-                to="/listing" 
-                className="text-sm font-medium text-foreground-secondary hover:text-foreground transition-colors"
-              >
-                Listing Generator
-              </Link>
-              <Link 
-                to="/models" 
-                className="text-sm font-medium text-foreground-secondary hover:text-foreground transition-colors"
-              >
-                My Models
-              </Link>
-              <Link 
-                to="/history" 
-                className="text-sm font-medium text-foreground-secondary hover:text-foreground transition-colors"
-              >
-                History
-              </Link>
-            </div>
+            {user && (
+              <div className="hidden md:flex items-center space-x-8">
+                <Link 
+                  to="/enhance" 
+                  className="text-sm font-medium text-foreground-secondary hover:text-foreground transition-colors"
+                >
+                  Photo Enhancer
+                </Link>
+                <Link 
+                  to="/listing" 
+                  className="text-sm font-medium text-foreground-secondary hover:text-foreground transition-colors"
+                >
+                  Listing Generator
+                </Link>
+                <Link 
+                  to="/models" 
+                  className="text-sm font-medium text-foreground-secondary hover:text-foreground transition-colors"
+                >
+                  My Models
+                </Link>
+                <Link 
+                  to="/history" 
+                  className="text-sm font-medium text-foreground-secondary hover:text-foreground transition-colors"
+                >
+                  History
+                </Link>
+              </div>
+            )}
             
             {user ? (
               <DropdownMenu>
