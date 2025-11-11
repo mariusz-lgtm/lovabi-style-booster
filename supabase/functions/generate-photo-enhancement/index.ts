@@ -71,23 +71,37 @@ Detail Preservation: Maintain every small stitching detail, button, tag, label, 
 Goal: Deliver a high-end, e-commerce-ready product image suitable for use in online stores, fashion catalogs, and professional retail listings — sharp, clean, and realistic with flawless presentation.`;
     } else if (mode === 'virtual-tryon') {
       const isCustomModel = modelId && modelId.length === 36;
+      console.log('Virtual try-on mode - modelId:', modelId, 'isCustomModel:', isCustomModel);
 
       if (isCustomModel) {
+        console.log('Fetching photos for custom model:', modelId);
         const { data: modelPhotos, error: photosError } = await supabaseClient
           .from('model_photos')
           .select('storage_path')
           .eq('model_id', modelId)
           .order('photo_order');
 
-        if (photosError) throw photosError;
+        if (photosError) {
+          console.error('Error fetching model photos:', photosError);
+          throw photosError;
+        }
+
+        console.log('Found model photos:', modelPhotos?.length || 0, 'photos');
 
         if (modelPhotos && modelPhotos.length > 0) {
           for (const photo of modelPhotos) {
-            const { data: imageData } = await supabaseClient.storage
+            console.log('Downloading photo from storage:', photo.storage_path);
+            const { data: imageData, error: downloadError } = await supabaseClient.storage
               .from('model-photos')
               .download(photo.storage_path);
 
+            if (downloadError) {
+              console.error('Error downloading photo:', downloadError);
+              continue;
+            }
+
             if (imageData) {
+              console.log('Converting photo to base64...');
               const arrayBuffer = await imageData.arrayBuffer();
               const bytes = new Uint8Array(arrayBuffer);
               let binary = '';
@@ -101,8 +115,14 @@ Goal: Deliver a high-end, e-commerce-ready product image suitable for use in onl
                 type: "image_url",
                 image_url: { url: `data:image/jpeg;base64,${base64}` }
               });
+              console.log('Successfully added reference image');
+            } else {
+              console.warn('No image data received for photo:', photo.storage_path);
             }
           }
+          console.log('Total reference images added:', referenceImages.length);
+        } else {
+          console.warn('No model photos found in database for model:', modelId);
         }
       }
 
