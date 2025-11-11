@@ -65,22 +65,43 @@ const History = () => {
     return map[bg] || bg;
   };
 
-  const handleDownload = (imagePath: string, historyId: string) => {
-    const { data: urlData } = supabase.storage
-      .from('generated-images')
-      .getPublicUrl(imagePath);
-    
-    const a = document.createElement('a');
-    a.href = urlData.publicUrl;
-    a.download = `lovabi-${historyId}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    toast({
-      title: "Download started",
-      description: "Your image is being downloaded.",
-    });
+  const handleDownload = async (imagePath: string, historyId: string) => {
+    try {
+      const { data: urlData } = supabase.storage
+        .from('generated-images')
+        .getPublicUrl(imagePath);
+      
+      const response = await fetch(urlData.publicUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      const blob = await response.blob();
+      
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `lovabi-${historyId}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
+      
+      toast({
+        title: "Download started",
+        description: "Your image is being downloaded.",
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download failed",
+        description: "Could not download the image. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
