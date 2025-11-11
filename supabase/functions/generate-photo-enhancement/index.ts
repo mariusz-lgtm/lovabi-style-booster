@@ -79,12 +79,15 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels. Do
       const isCustomModel = modelId && modelId.length === 36;
       console.log('Virtual try-on mode - modelId:', modelId, 'isCustomModel:', isCustomModel);
 
+      let modelBodyType = '';
+      let modelHeightCm = 0;
+
       if (isCustomModel) {
-        console.log('Fetching generated portrait for custom model:', modelId);
+        console.log('Fetching body type and generated portrait for custom model:', modelId);
         
         const { data: modelData, error: modelError } = await supabaseClient
           .from('user_models')
-          .select('generated_portrait_path')
+          .select('body_type, height_cm, generated_portrait_path')
           .eq('id', modelId)
           .eq('user_id', user.id)
           .single();
@@ -94,6 +97,10 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels. Do
           throw new Error('Generated portrait not found for this model');
         }
 
+        modelBodyType = modelData.body_type || '';
+        modelHeightCm = modelData.height_cm || 0;
+        
+        console.log(`Model body type: ${modelBodyType}, height: ${modelHeightCm}cm`);
         console.log('Downloading generated portrait from storage:', modelData.generated_portrait_path);
 
         const { data: portraitData, error: downloadError } = await supabaseClient.storage
@@ -151,7 +158,16 @@ Post-processing: Commercial-grade retouching and color grading; clean tones, rea
 
 Format & Quality: Perfect square composition (1:1 aspect ratio), 1536×1536 pixels resolution. Editorial fashion magazine level — ultra high-resolution with perfect clarity, balanced framing with the model centered naturally in the frame.
 
-${isCustomModel ? `CRITICAL: Use the provided AI-generated portrait as the EXACT reference for the model's appearance:
+${isCustomModel ? `CRITICAL BODY TYPE MATCHING — NON-NEGOTIABLE:
+- The model MUST have the EXACT body type from the portrait: ${modelBodyType}
+- Body proportions: ${modelBodyType} build with ${modelHeightCm}cm height proportions
+- Match shoulder width, body frame, waist, hips, and overall body shape precisely
+- NO idealization, slimming, smoothing, or ANY modification of body shape
+- The body type ${modelBodyType} must be clearly visible and accurately represented
+- If the portrait shows ${modelBodyType} figure, the try-on MUST show ${modelBodyType} figure
+- Height proportions for ${modelHeightCm}cm stature must be maintained exactly
+
+CRITICAL: Use the provided AI-generated portrait as the EXACT reference for the model's appearance:
 - This is a professionally generated portrait that captures the model's authentic look
 - Match the face, body type, proportions, and physical characteristics precisely
 - Maintain the same skin tone, hair style, facial features, and body build
@@ -183,7 +199,16 @@ Post-processing: Light smartphone-style enhancement — gentle contrast, warm to
 
 Format & Quality: Square mirror selfie composition (1:1 aspect ratio), 1536×1536 pixels resolution. High-resolution realistic photo with subtle mirror reflections, true-to-life lighting and proportions, balanced framing showing the full outfit clearly.
 
-${isCustomModel ? `CRITICAL: Use the provided AI-generated portrait as the EXACT reference for the model's appearance:
+${isCustomModel ? `CRITICAL BODY TYPE MATCHING — NON-NEGOTIABLE:
+- The model MUST have the EXACT body type from the portrait: ${modelBodyType}
+- Body proportions: ${modelBodyType} build with ${modelHeightCm}cm height proportions
+- Match shoulder width, body frame, waist, hips, and overall body shape precisely
+- NO idealization, slimming, smoothing, or ANY modification of body shape
+- The body type ${modelBodyType} must be clearly visible and accurately represented
+- If the portrait shows ${modelBodyType} figure, the selfie MUST show ${modelBodyType} figure
+- Height proportions for ${modelHeightCm}cm stature must be maintained exactly
+
+CRITICAL: Use the provided AI-generated portrait as the EXACT reference for the model's appearance:
 - This is a professionally generated portrait that captures the model's authentic look
 - Match the face, body type, proportions, and physical characteristics precisely
 - Maintain the same skin tone, hair style, facial features, and body build from the portrait

@@ -15,7 +15,7 @@ const SelectedModelPreview = ({ selectedModelId, customModels }: SelectedModelPr
   const model = predefinedModel || customModel;
   if (!model) return null;
 
-  const imageUrl = predefinedModel ? predefinedModel.imageUrl : customModel!.photos[0];
+  const imageUrl = predefinedModel ? predefinedModel.imageUrl : (customModel!.generatedPortrait || customModel!.photos[0]);
   const modelName = predefinedModel ? predefinedModel.name : customModel!.name;
   const isCustom = !!customModel;
 

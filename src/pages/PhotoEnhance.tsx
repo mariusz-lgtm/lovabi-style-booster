@@ -72,10 +72,23 @@ const PhotoEnhance = () => {
           })
         );
 
+        // Get generated portrait
+        let generatedPortrait = '';
+        if (model.generated_portrait_path) {
+          const { data: portraitSignedData } = await supabase.storage
+            .from('model-photos')
+            .createSignedUrl(model.generated_portrait_path, 3600);
+          
+          if (portraitSignedData) {
+            generatedPortrait = portraitSignedData.signedUrl;
+          }
+        }
+
         return {
           id: model.id,
           name: model.name,
           photos: photoUrls.filter(url => url !== ''),
+          generatedPortrait,
           createdAt: model.created_at
         };
       })

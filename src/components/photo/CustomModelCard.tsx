@@ -26,7 +26,7 @@ const CustomModelCard = ({ model, isSelected, onSelect }: CustomModelCardProps) 
       
       <div className="aspect-square mb-3 rounded-lg overflow-hidden bg-secondary">
         <img
-          src={model.photos[0]}
+          src={model.generatedPortrait || model.photos[0]}
           alt={model.name}
           className="w-full h-full object-cover"
         />
