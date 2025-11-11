@@ -9,6 +9,10 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<{ error: any }>;
+  updateProfile: (updates: { full_name?: string; avatar_url?: string; country?: string }) => Promise<{ error: any }>;
+  deleteAccount: () => Promise<{ error: any }>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,8 +68,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await supabase.auth.signOut();
   };
 
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error };
+  };
+
+  const updateProfile = async (updates: { full_name?: string; avatar_url?: string; country?: string }) => {
+    const { error } = await supabase.from('profiles').update(updates).eq('id', user?.id!);
+    if (!error) {
+      await refreshUser();
+    }
+    return { error };
+  };
+
+  const deleteAccount = async () => {
+    const { error } = await supabase.functions.invoke('delete-user-account');
+    return { error };
+  };
+
+  const refreshUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
+    setUser(session?.user ?? null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, updatePassword, updateProfile, deleteAccount, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
