@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import imageCompression from "browser-image-compression";
 
 interface CustomModelCreatorProps {
   onSave: (name: string, photos: string[]) => void;
@@ -15,6 +16,7 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
   const [name, setName] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -32,6 +34,27 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
     processFiles(files);
   };
 
+  const compressImage = async (file: File): Promise<File> => {
+    const options = {
+      maxSizeMB: 0.5,
+      maxWidthOrHeight: 800,
+      useWebWorker: true,
+      fileType: 'image/jpeg',
+      initialQuality: 0.75
+    };
+
+    try {
+      console.log('Original file size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+      const compressedFile = await imageCompression(file, options);
+      console.log('Compressed file size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+      return compressedFile;
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      toast.error('Failed to compress image');
+      throw error;
+    }
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
@@ -39,22 +62,46 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
     }
   };
 
-  const processFiles = (files: File[]) => {
+  const processFiles = async (files: File[]) => {
     if (photos.length + files.length > 3) {
       toast.error("Maximum 3 photos allowed");
       return;
     }
 
-    files.forEach((file) => {
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          setPhotos((prev) => [...prev, result]);
-        };
-        reader.readAsDataURL(file);
+    setIsCompressing(true);
+
+    try {
+      const newPhotos = await Promise.all(
+        files.map(async (file) => {
+          if (!file.type.startsWith("image/")) {
+            return null;
+          }
+
+          try {
+            const compressedFile = await compressImage(file);
+            
+            return new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(compressedFile);
+            });
+          } catch (error) {
+            console.error('Error processing file:', error);
+            return null;
+          }
+        })
+      );
+
+      const validPhotos = newPhotos.filter((photo): photo is string => photo !== null);
+      
+      if (validPhotos.length > 0) {
+        setPhotos((prev) => [...prev, ...validPhotos]);
+        toast.success(`${validPhotos.length} photo${validPhotos.length !== 1 ? 's' : ''} added successfully`);
       }
-    });
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const removePhoto = (index: number) => {
@@ -163,9 +210,9 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
           <Button
             onClick={handleSave}
             className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-            disabled={!name.trim() || photos.length === 0}
+            disabled={!name.trim() || photos.length === 0 || isCompressing}
           >
-            Save Model
+            {isCompressing ? 'Compressing images...' : 'Save Model'}
           </Button>
           <Button
             onClick={onCancel}
