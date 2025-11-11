@@ -68,6 +68,8 @@ Background Refinement: Replace or clean up the background to a pure white seamle
 
 Detail Preservation: Maintain every small stitching detail, button, tag, label, and texture exactly as in the original photo — no visual alteration of the design or structure of the clothing.
 
+Format & Composition: Generate the output in perfect square aspect ratio (1:1) with dimensions 1536×1536 pixels. Center the garment naturally within the frame with balanced margins on all sides, ensuring the entire item is fully visible and professionally presented.
+
 Goal: Deliver a high-end, e-commerce-ready product image suitable for use in online stores, fashion catalogs, and professional retail listings — sharp, clean, and realistic with flawless presentation.`;
     } else if (mode === 'virtual-tryon') {
       const isCustomModel = modelId && modelId.length === 36;
@@ -146,7 +148,7 @@ Model pose: Confident, relaxed posture naturally showcasing the clothing fit, fa
 
 Post-processing: Commercial-grade retouching and color grading; clean tones, realistic contrast, and ultra-sharp fabric details.
 
-Quality: Editorial fashion magazine level, 4K ultra high-resolution, perfect clarity.
+Format & Quality: Perfect square composition (1:1 aspect ratio), 1536×1536 pixels resolution. Editorial fashion magazine level — ultra high-resolution with perfect clarity, balanced framing with the model centered naturally in the frame.
 
 ${isCustomModel ? 'Use the provided reference images to accurately match the model\'s face, body proportions, and appearance.' : ''}`,
         selfie: `Realistic mirror selfie photo of a young woman wearing exactly the same clothing item as shown in the reference image — all colors, textures, and garment details must be perfectly accurate and true to life.
@@ -167,7 +169,7 @@ Mood: Approachable, authentic, Instagram / Vinted aesthetic; spontaneous but fla
 
 Post-processing: Light smartphone-style enhancement — gentle contrast, warm tones, sharp details of the clothing.
 
-Quality: High-resolution realistic photo (4K), subtle reflections, true-to-life lighting and proportions.
+Format & Quality: Square mirror selfie composition (1:1 aspect ratio), 1536×1536 pixels resolution. High-resolution realistic photo with subtle mirror reflections, true-to-life lighting and proportions, balanced framing showing the full outfit clearly.
 
 ${isCustomModel ? 'Use the reference images to precisely match the model\'s face, hair, and body proportions for full consistency.' : ''}`
       };
