@@ -26,26 +26,36 @@ serve(async (req) => {
 
     if (authError || !user) throw new Error('Unauthorized');
 
-    const { action, modelId, modelName, photos, setActive } = await req.json();
+    const { action, modelId, modelName, photos, setActive, age, bodyType, heightCm, skinTone, hairDescription, additionalNotes } = await req.json();
 
     switch (action) {
       case 'create': {
-        if (!modelName || !photos || photos.length === 0) {
-          throw new Error('Missing modelName or photos');
+        if (!modelName || !photos || photos.length < 3) {
+          throw new Error('Missing modelName or minimum 3 photos required');
         }
 
+        console.log('Creating custom model with portrait generation...');
+
+        // Step 1: Create user_models record
         const { data: newModel, error: createError } = await supabaseClient
           .from('user_models')
           .insert({
             user_id: user.id,
             name: modelName,
-            is_active: setActive || false
+            is_active: setActive || false,
+            age,
+            body_type: bodyType,
+            height_cm: heightCm,
+            skin_tone: skinTone,
+            hair_description: hairDescription,
+            additional_notes: additionalNotes
           })
           .select()
           .single();
 
         if (createError) throw createError;
 
+        // Step 2: Upload original photos to storage
         for (let i = 0; i < photos.length && i < 3; i++) {
           const photoBase64 = photos[i];
           const fileName = `${user.id}/${newModel.id}/photo_${i + 1}.jpg`;
@@ -71,6 +81,114 @@ serve(async (req) => {
           });
         }
 
+        console.log('Original photos uploaded, generating AI portrait...');
+
+        // Step 3: Generate AI portrait using Lovable AI
+        const portraitPrompt = `Generate a professional studio portrait (headshot and upper body) of a woman based on the provided reference images and description.
+
+CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
+
+Reference Images Analysis:
+- Use all ${photos.length} provided reference images to accurately capture the person's appearance
+- Match facial features, face shape, eyes, nose, mouth, and overall likeness precisely
+- Replicate skin tone, complexion, and any distinctive features faithfully
+
+Physical Description to Match:
+- Age: ${age} years old
+- Body Type: ${bodyType} — maintain this exact body type and build
+- Height: ${heightCm}cm — ensure proportions match this height
+- Skin Tone: ${skinTone} — reproduce accurately
+- Hair: ${hairDescription}
+${additionalNotes ? `- Additional characteristics: ${additionalNotes}` : ''}
+
+Portrait Specifications:
+- Professional studio portrait photography
+- Clean white or neutral background (seamless backdrop)
+- Three-point studio lighting — soft, even, flattering
+- Camera: Full-frame DSLR, 85mm portrait lens, f/2.8
+- Composition: Upper body visible (head, shoulders, chest), centered framing
+- Expression: Natural, confident, friendly — suitable for fashion modeling
+- Clothing: Simple, elegant top in neutral color (white, black, beige)
+- Styling: Professional but approachable — suitable for e-commerce fashion photography
+
+CRITICAL BODY TYPE MATCHING:
+- Replicate the exact body type from reference images: ${bodyType}
+- Match shoulder width, body frame, and overall proportions precisely
+- Maintain height proportions for ${heightCm}cm stature
+- NO idealization, slimming, or modification of body shape
+- The portrait must show the same physical build as in the reference photos
+
+Quality & Format:
+- 1:1 aspect ratio, 1536×1536 pixels exactly
+- Ultra high-resolution, sharp focus, professional retouching
+- Natural skin tones, realistic lighting, editorial quality
+- This portrait will be used as a reference for virtual clothing try-on
+
+CRITICAL: The generated portrait must look like the EXACT same person from the reference images — same face, same body type, same proportions. Match the physical description provided precisely. NO idealization or significant alteration.
+
+CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exactly.`;
+
+        const content = [
+          { type: "text", text: portraitPrompt },
+          ...photos.map((photoBase64: string) => ({
+            type: "image_url",
+            image_url: { url: photoBase64 }
+          }))
+        ];
+
+        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-image",
+            messages: [{ role: "user", content }],
+            modalities: ["image", "text"]
+          })
+        });
+
+        if (!aiResponse.ok) {
+          const errorText = await aiResponse.text();
+          console.error('AI generation error:', aiResponse.status, errorText);
+          throw new Error(`AI portrait generation failed: ${aiResponse.status}`);
+        }
+
+        const aiData = await aiResponse.json();
+        const generatedImageBase64 = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+        if (!generatedImageBase64) {
+          throw new Error('No image returned from AI');
+        }
+
+        console.log('AI portrait generated, uploading to storage...');
+
+        // Step 4: Upload generated portrait to storage
+        const portraitBuffer = Uint8Array.from(
+          atob(generatedImageBase64.split(',')[1]),
+          c => c.charCodeAt(0)
+        );
+
+        const portraitPath = `${user.id}/${newModel.id}/generated_portrait.png`;
+        const { error: portraitUploadError } = await supabaseClient.storage
+          .from('model-photos')
+          .upload(portraitPath, portraitBuffer, {
+            contentType: 'image/png',
+            upsert: true
+          });
+
+        if (portraitUploadError) throw portraitUploadError;
+
+        // Step 5: Update user_models with generated_portrait_path
+        await supabaseClient
+          .from('user_models')
+          .update({ generated_portrait_path: portraitPath })
+          .eq('id', newModel.id);
+
+        console.log('Portrait uploaded successfully:', portraitPath);
+
+        // Step 6: Update preferences if setActive
         if (setActive) {
           await supabaseClient.from('model_preferences').upsert({
             user_id: user.id,
@@ -89,28 +207,36 @@ serve(async (req) => {
       case 'delete': {
         if (!modelId) throw new Error('Missing modelId');
 
-        // Check if model was active before deletion
+        console.log('Deleting model:', modelId);
+
+        // Get model data
         const { data: model } = await supabaseClient
           .from('user_models')
-          .select('is_active')
+          .select('is_active, generated_portrait_path')
           .eq('id', modelId)
           .eq('user_id', user.id)
           .single();
 
         const wasActive = model?.is_active;
 
-        // Get photos to delete from storage
+        // Get and delete original photos
         const { data: photos } = await supabaseClient
           .from('model_photos')
           .select('storage_path')
           .eq('model_id', modelId);
 
-        // Delete files from storage
         if (photos && photos.length > 0) {
           const paths = photos.map(p => p.storage_path);
           await supabaseClient.storage
             .from('model-photos')
             .remove(paths);
+        }
+
+        // Delete generated portrait if exists
+        if (model?.generated_portrait_path) {
+          await supabaseClient.storage
+            .from('model-photos')
+            .remove([model.generated_portrait_path]);
         }
 
         // Delete model_photos records
@@ -128,7 +254,7 @@ serve(async (req) => {
 
         if (deleteError) throw deleteError;
 
-        // If deleted model was active, reset preferences to Emma
+        // Reset preferences if active
         if (wasActive) {
           await supabaseClient
             .from('model_preferences')
@@ -140,8 +266,166 @@ serve(async (req) => {
             });
         }
 
+        console.log('Model deleted successfully');
+
         return new Response(
           JSON.stringify({ success: true, resetToDefault: wasActive }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      case 'regenerate': {
+        if (!modelId) throw new Error('Missing modelId');
+
+        console.log('Regenerating portrait for model:', modelId);
+
+        // Get model data
+        const { data: model, error: modelError } = await supabaseClient
+          .from('user_models')
+          .select(`
+            *,
+            model_photos (storage_path, photo_order)
+          `)
+          .eq('id', modelId)
+          .eq('user_id', user.id)
+          .single();
+
+        if (modelError || !model) throw new Error('Model not found');
+
+        // Download original photos
+        const sortedPhotos = model.model_photos.sort((a: any, b: any) => a.photo_order - b.photo_order);
+        const photoBase64Array = await Promise.all(
+          sortedPhotos.map(async (p: any) => {
+            const { data: photoData } = await supabaseClient.storage
+              .from('model-photos')
+              .download(p.storage_path);
+
+            if (!photoData) throw new Error('Failed to download photo');
+
+            const arrayBuffer = await photoData.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            
+            let binaryString = '';
+            const chunkSize = 8192;
+            for (let i = 0; i < uint8Array.length; i += chunkSize) {
+              const chunk = uint8Array.subarray(i, i + chunkSize);
+              binaryString += String.fromCharCode.apply(null, Array.from(chunk));
+            }
+            
+            const base64Image = btoa(binaryString);
+            return `data:image/jpeg;base64,${base64Image}`;
+          })
+        );
+
+        console.log('Original photos downloaded, regenerating AI portrait...');
+
+        // Regenerate portrait with same logic as CREATE
+        const portraitPrompt = `Generate a professional studio portrait (headshot and upper body) of a woman based on the provided reference images and description.
+
+CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
+
+Reference Images Analysis:
+- Use all ${photoBase64Array.length} provided reference images to accurately capture the person's appearance
+- Match facial features, face shape, eyes, nose, mouth, and overall likeness precisely
+- Replicate skin tone, complexion, and any distinctive features faithfully
+
+Physical Description to Match:
+- Age: ${model.age} years old
+- Body Type: ${model.body_type} — maintain this exact body type and build
+- Height: ${model.height_cm}cm — ensure proportions match this height
+- Skin Tone: ${model.skin_tone} — reproduce accurately
+- Hair: ${model.hair_description}
+${model.additional_notes ? `- Additional characteristics: ${model.additional_notes}` : ''}
+
+Portrait Specifications:
+- Professional studio portrait photography
+- Clean white or neutral background (seamless backdrop)
+- Three-point studio lighting — soft, even, flattering
+- Camera: Full-frame DSLR, 85mm portrait lens, f/2.8
+- Composition: Upper body visible (head, shoulders, chest), centered framing
+- Expression: Natural, confident, friendly — suitable for fashion modeling
+- Clothing: Simple, elegant top in neutral color (white, black, beige)
+- Styling: Professional but approachable — suitable for e-commerce fashion photography
+
+CRITICAL BODY TYPE MATCHING:
+- Replicate the exact body type from reference images: ${model.body_type}
+- Match shoulder width, body frame, and overall proportions precisely
+- Maintain height proportions for ${model.height_cm}cm stature
+- NO idealization, slimming, or modification of body shape
+- The portrait must show the same physical build as in the reference photos
+
+Quality & Format:
+- 1:1 aspect ratio, 1536×1536 pixels exactly
+- Ultra high-resolution, sharp focus, professional retouching
+- Natural skin tones, realistic lighting, editorial quality
+- This portrait will be used as a reference for virtual clothing try-on
+
+CRITICAL: The generated portrait must look like the EXACT same person from the reference images — same face, same body type, same proportions. Match the physical description provided precisely. NO idealization or significant alteration.
+
+CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exactly.`;
+
+        const content = [
+          { type: "text", text: portraitPrompt },
+          ...photoBase64Array.map((photoBase64: string) => ({
+            type: "image_url",
+            image_url: { url: photoBase64 }
+          }))
+        ];
+
+        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-image",
+            messages: [{ role: "user", content }],
+            modalities: ["image", "text"]
+          })
+        });
+
+        if (!aiResponse.ok) {
+          const errorText = await aiResponse.text();
+          console.error('AI regeneration error:', aiResponse.status, errorText);
+          throw new Error(`AI portrait regeneration failed: ${aiResponse.status}`);
+        }
+
+        const aiData = await aiResponse.json();
+        const generatedImageBase64 = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+        if (!generatedImageBase64) {
+          throw new Error('No image returned from AI');
+        }
+
+        console.log('AI portrait regenerated, uploading to storage...');
+
+        // Upload new portrait
+        const portraitBuffer = Uint8Array.from(
+          atob(generatedImageBase64.split(',')[1]),
+          c => c.charCodeAt(0)
+        );
+
+        const portraitPath = `${user.id}/${modelId}/generated_portrait.png`;
+        const { error: portraitUploadError } = await supabaseClient.storage
+          .from('model-photos')
+          .upload(portraitPath, portraitBuffer, {
+            contentType: 'image/png',
+            upsert: true
+          });
+
+        if (portraitUploadError) throw portraitUploadError;
+
+        // Update user_models with new generated_portrait_path
+        await supabaseClient
+          .from('user_models')
+          .update({ generated_portrait_path: portraitPath })
+          .eq('id', modelId);
+
+        console.log('Portrait regenerated successfully:', portraitPath);
+
+        return new Response(
+          JSON.stringify({ success: true }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }

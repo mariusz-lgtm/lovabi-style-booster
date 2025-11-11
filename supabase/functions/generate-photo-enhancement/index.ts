@@ -80,56 +80,51 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels. Do
       console.log('Virtual try-on mode - modelId:', modelId, 'isCustomModel:', isCustomModel);
 
       if (isCustomModel) {
-        console.log('Fetching photos for custom model:', modelId);
-        const { data: modelPhotos, error: photosError } = await supabaseClient
-          .from('model_photos')
-          .select('storage_path')
-          .eq('model_id', modelId)
-          .order('photo_order');
+        console.log('Fetching generated portrait for custom model:', modelId);
+        
+        const { data: modelData, error: modelError } = await supabaseClient
+          .from('user_models')
+          .select('generated_portrait_path')
+          .eq('id', modelId)
+          .eq('user_id', user.id)
+          .single();
 
-        if (photosError) {
-          console.error('Error fetching model photos:', photosError);
-          throw photosError;
+        if (modelError || !modelData?.generated_portrait_path) {
+          console.error('Generated portrait not found:', modelError);
+          throw new Error('Generated portrait not found for this model');
         }
 
-        console.log('Found model photos:', modelPhotos?.length || 0, 'photos');
+        console.log('Downloading generated portrait from storage:', modelData.generated_portrait_path);
 
-        if (modelPhotos && modelPhotos.length > 0) {
-          for (const photo of modelPhotos) {
-            console.log('Downloading photo from storage:', photo.storage_path);
-            const { data: imageData, error: downloadError } = await supabaseClient.storage
-              .from('model-photos')
-              .download(photo.storage_path);
+        const { data: portraitData, error: downloadError } = await supabaseClient.storage
+          .from('model-photos')
+          .download(modelData.generated_portrait_path);
 
-            if (downloadError) {
-              console.error('Error downloading photo:', downloadError);
-              continue;
-            }
-
-            if (imageData) {
-              console.log('Converting photo to base64...');
-              const arrayBuffer = await imageData.arrayBuffer();
-              const bytes = new Uint8Array(arrayBuffer);
-              let binary = '';
-              const chunkSize = 8192;
-              for (let i = 0; i < bytes.length; i += chunkSize) {
-                const chunk = bytes.subarray(i, i + chunkSize);
-                binary += String.fromCharCode.apply(null, Array.from(chunk));
-              }
-              const base64 = btoa(binary);
-              referenceImages.push({
-                type: "image_url",
-                image_url: { url: `data:image/jpeg;base64,${base64}` }
-              });
-              console.log('Successfully added reference image');
-            } else {
-              console.warn('No image data received for photo:', photo.storage_path);
-            }
-          }
-          console.log('Total reference images added:', referenceImages.length);
-        } else {
-          console.warn('No model photos found in database for model:', modelId);
+        if (downloadError || !portraitData) {
+          console.error('Failed to download generated portrait:', downloadError);
+          throw new Error('Failed to download generated portrait');
         }
+
+        console.log('Converting portrait to base64...');
+        const arrayBuffer = await portraitData.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        let binaryString = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+          const chunk = uint8Array.subarray(i, i + chunkSize);
+          binaryString += String.fromCharCode.apply(null, Array.from(chunk));
+        }
+        
+        const base64Image = btoa(binaryString);
+        const photoBase64 = `data:image/png;base64,${base64Image}`;
+
+        referenceImages.push({
+          type: "image_url",
+          image_url: { url: photoBase64 }
+        });
+
+        console.log('Successfully added generated portrait as reference image');
       }
 
       const stylePrompts = {
@@ -156,14 +151,14 @@ Post-processing: Commercial-grade retouching and color grading; clean tones, rea
 
 Format & Quality: Perfect square composition (1:1 aspect ratio), 1536×1536 pixels resolution. Editorial fashion magazine level — ultra high-resolution with perfect clarity, balanced framing with the model centered naturally in the frame.
 
-${isCustomModel ? `CRITICAL: Use the provided reference images to EXACTLY replicate the model's physical characteristics:
-- Body type and figure (petite, curvy, athletic, plus-size, etc.) — match precisely
-- Height proportions and body frame — maintain the exact silhouette
-- Shoulder width, waist, hips, leg length — keep all proportions identical
-- Skin tone, facial features, hair style and color — reproduce faithfully
-- Overall size and build — NO idealization or modification
+${isCustomModel ? `CRITICAL: Use the provided AI-generated portrait as the EXACT reference for the model's appearance:
+- This is a professionally generated portrait that captures the model's authentic look
+- Match the face, body type, proportions, and physical characteristics precisely
+- Maintain the same skin tone, hair style, facial features, and body build
+- NO modifications or idealization — replicate the portrait appearance exactly
+- The model in the generated image must look identical to the portrait reference
 
-The generated model MUST look like the same person from the reference photos with the same body type and proportions. Do not create a generic model.` : ''}
+This portrait was created based on multiple real photos and detailed physical description to ensure accuracy and consistency.` : ''}
 
 CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exactly. Do not deviate from this format.`,
         selfie: `CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
@@ -188,14 +183,14 @@ Post-processing: Light smartphone-style enhancement — gentle contrast, warm to
 
 Format & Quality: Square mirror selfie composition (1:1 aspect ratio), 1536×1536 pixels resolution. High-resolution realistic photo with subtle mirror reflections, true-to-life lighting and proportions, balanced framing showing the full outfit clearly.
 
-${isCustomModel ? `CRITICAL: The model in the selfie must be the EXACT same person from the reference images:
-- Match the body type, size, and figure precisely (petite, curvy, athletic, plus-size, etc.)
-- Replicate height proportions, body frame, and silhouette exactly
-- Keep facial features, skin tone, hair, and physical build identical
-- Maintain shoulder width, waist, hips, and leg proportions from reference photos
-- NO modifications, idealization, or changes to the model's appearance
+${isCustomModel ? `CRITICAL: Use the provided AI-generated portrait as the EXACT reference for the model's appearance:
+- This is a professionally generated portrait that captures the model's authentic look
+- Match the face, body type, proportions, and physical characteristics precisely
+- Maintain the same skin tone, hair style, facial features, and body build from the portrait
+- NO modifications or idealization — replicate the portrait appearance exactly
+- The model in the selfie must look identical to the portrait reference
 
-This must look like a real selfie of the person in the reference photos wearing the garment — authentic body type and realistic proportions are mandatory.` : ''}
+This portrait was created based on multiple real photos and detailed physical description to ensure accuracy and consistency.` : ''}
 
 CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exactly. Do not deviate from this format.`
       };

@@ -9,8 +9,16 @@ export interface PredefinedModel {
 export interface CustomModel {
   id: string;
   name: string;
-  photos: string[]; // base64 data URLs
+  photos: string[]; // Original photos - kept for regeneration
+  generatedPortrait?: string; // AI-generated portrait (signed URL)
   createdAt: string;
+  // Physical description fields:
+  age?: number;
+  bodyType?: 'petite' | 'slim' | 'athletic' | 'curvy' | 'plus-size';
+  heightCm?: number;
+  skinTone?: 'fair' | 'light' | 'medium' | 'olive' | 'tan' | 'brown' | 'dark';
+  hairDescription?: string;
+  additionalNotes?: string;
 }
 
 export type PhotoStyle = "selfie" | "studio";

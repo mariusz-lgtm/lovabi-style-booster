@@ -1,4 +1,4 @@
-import { Trash2, Star, Eye } from "lucide-react";
+import { Trash2, Star, Eye, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,13 +9,15 @@ interface ModelManagementListProps {
   models: CustomModel[];
   activeModelId: string;
   onSetActive: (modelId: string) => void;
+  onRegeneratePortrait: (modelId: string) => void;
   onDelete: (modelId: string) => void;
 }
 
 const ModelManagementList = ({ 
   models, 
   activeModelId,
-  onSetActive, 
+  onSetActive,
+  onRegeneratePortrait,
   onDelete 
 }: ModelManagementListProps) => {
   if (models.length === 0) {
@@ -47,12 +49,17 @@ const ModelManagementList = ({
               </Badge>
             )}
 
-            <div className="aspect-square mb-4 rounded-lg overflow-hidden bg-secondary">
+            <div className="aspect-square mb-4 rounded-lg overflow-hidden bg-secondary relative">
               <img
-                src={model.photos[0]}
+                src={model.generatedPortrait || model.photos[0]}
                 alt={model.name}
                 className="w-full h-full object-cover"
               />
+              {model.generatedPortrait && (
+                <Badge variant="secondary" className="absolute top-2 left-2 text-xs">
+                  AI Generated
+                </Badge>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -104,6 +111,15 @@ const ModelManagementList = ({
                     Set Active
                   </Button>
                 )}
+                <Button
+                  onClick={() => onRegeneratePortrait(model.id)}
+                  size="sm"
+                  variant="outline"
+                  className="border-border hover:bg-secondary"
+                  title="Regenerate AI portrait"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
                 <Button
                   onClick={() => onDelete(model.id)}
                   size="sm"

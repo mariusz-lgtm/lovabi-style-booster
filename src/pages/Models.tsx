@@ -32,7 +32,10 @@ const Models = () => {
       .from('user_models')
       .select(`
         *,
-        model_photos (*)
+        model_photos (
+          storage_path,
+          photo_order
+        )
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
@@ -44,7 +47,20 @@ const Models = () => {
     }
 
     const customModels = await Promise.all(
-      data.map(async (model) => {
+      data.map(async (model: any) => {
+        // Get generated portrait
+        let generatedPortrait = '';
+        if (model.generated_portrait_path) {
+          const { data: signedUrl } = await supabase.storage
+            .from('model-photos')
+            .createSignedUrl(model.generated_portrait_path, 3600);
+          
+          if (signedUrl) {
+            generatedPortrait = signedUrl.signedUrl;
+          }
+        }
+
+        // Keep original photos for potential regeneration
         const sortedPhotos = model.model_photos
           .sort((a: any, b: any) => a.photo_order - b.photo_order);
         
@@ -61,7 +77,14 @@ const Models = () => {
           id: model.id,
           name: model.name,
           photos: photoUrls.filter(url => url !== ''),
-          createdAt: model.created_at
+          generatedPortrait,
+          createdAt: model.created_at,
+          age: model.age,
+          bodyType: model.body_type,
+          heightCm: model.height_cm,
+          skinTone: model.skin_tone,
+          hairDescription: model.hair_description,
+          additionalNotes: model.additional_notes
         };
       })
     );
@@ -83,28 +106,48 @@ const Models = () => {
     }
   };
 
-  const handleSaveModel = async (name: string, photos: string[]) => {
+  const handleSaveModel = async (
+    name: string, 
+    photos: string[], 
+    description: {
+      age: number;
+      bodyType: string;
+      heightCm: number;
+      skinTone: string;
+      hairDescription: string;
+      additionalNotes: string;
+    }
+  ) => {
     if (!user) return;
     
+    setIsCreating(false);
+    toast.info("Creating your custom model and generating AI portrait...");
+
     try {
       const { data, error } = await supabase.functions.invoke('manage-custom-model', {
         body: {
           action: 'create',
           modelName: name,
           photos,
-          setActive: models.length === 0
+          setActive: models.length === 0,
+          age: description.age,
+          bodyType: description.bodyType,
+          heightCm: description.heightCm,
+          skinTone: description.skinTone,
+          hairDescription: description.hairDescription,
+          additionalNotes: description.additionalNotes
         }
       });
 
       if (error) throw error;
 
-      toast.success('Model created successfully!');
+      toast.success('Model portrait generated successfully!');
       await fetchModels();
       await fetchPreferences();
-      setIsCreating(false);
     } catch (error: any) {
       console.error('Error creating model:', error);
       toast.error(error.message || 'Failed to create model');
+      setIsCreating(true);
     }
   };
 
@@ -149,6 +192,27 @@ const Models = () => {
     }
   };
 
+  const handleRegeneratePortrait = async (modelId: string) => {
+    toast.info("Regenerating model portrait...");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-custom-model', {
+        body: {
+          action: 'regenerate',
+          modelId
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success("Portrait regenerated successfully!");
+      await fetchModels();
+    } catch (error: any) {
+      console.error('Error regenerating portrait:', error);
+      toast.error(error.message || 'Failed to regenerate portrait');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -185,6 +249,7 @@ const Models = () => {
               models={models}
               activeModelId={activeModelId}
               onSetActive={handleSetActive}
+              onRegeneratePortrait={handleRegeneratePortrait}
               onDelete={handleDelete}
             />
           )}

@@ -4,13 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import imageCompression from "browser-image-compression";
 import { CameraPreviewDialog } from "@/components/photo/CameraPreviewDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CustomModelCreatorProps {
-  onSave: (name: string, photos: string[]) => void;
+  onSave: (name: string, photos: string[], description: {
+    age: number;
+    bodyType: string;
+    heightCm: number;
+    skinTone: string;
+    hairDescription: string;
+    additionalNotes: string;
+  }) => void;
   onCancel: () => void;
 }
 
@@ -20,7 +30,16 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [isGeneratingPortrait, setIsGeneratingPortrait] = useState(false);
   const [cameraPreview, setCameraPreview] = useState<string | null>(null);
+
+  // Physical description state
+  const [age, setAge] = useState(25);
+  const [bodyType, setBodyType] = useState<'petite' | 'slim' | 'athletic' | 'curvy' | 'plus-size'>('slim');
+  const [heightCm, setHeightCm] = useState(165);
+  const [skinTone, setSkinTone] = useState<'fair' | 'light' | 'medium' | 'olive' | 'tan' | 'brown' | 'dark'>('medium');
+  const [hairDescription, setHairDescription] = useState('');
+  const [additionalNotes, setAdditionalNotes] = useState('');
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -162,11 +181,20 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
       toast.error("Please enter a model name");
       return;
     }
-    if (photos.length === 0) {
-      toast.error("Please upload at least 1 photo");
+    if (photos.length < 3) {
+      toast.error("Please upload at least 3 photos");
       return;
     }
-    onSave(name, photos);
+    
+    setIsGeneratingPortrait(true);
+    onSave(name, photos, {
+      age,
+      bodyType,
+      heightCm,
+      skinTone,
+      hairDescription,
+      additionalNotes
+    });
   };
 
   return (
@@ -190,10 +218,104 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
           />
         </div>
 
+        {/* Physical Description Section */}
+        <Card className="p-4 bg-secondary/30 border-border">
+          <h3 className="font-heading font-semibold text-foreground mb-4">
+            Physical Description
+          </h3>
+          
+          {/* Age Slider */}
+          <div className="mb-4">
+            <Label className="text-foreground mb-2">Age: {age} years</Label>
+            <Slider
+              value={[age]}
+              onValueChange={(v) => setAge(v[0])}
+              min={18}
+              max={65}
+              step={1}
+              className="mt-2"
+            />
+          </div>
+          
+          {/* Body Type Dropdown */}
+          <div className="mb-4">
+            <Label className="text-foreground mb-2">Body Type</Label>
+            <Select value={bodyType} onValueChange={(value) => setBodyType(value as typeof bodyType)}>
+              <SelectTrigger className="bg-background border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="petite">Petite</SelectItem>
+                <SelectItem value="slim">Slim</SelectItem>
+                <SelectItem value="athletic">Athletic</SelectItem>
+                <SelectItem value="curvy">Curvy</SelectItem>
+                <SelectItem value="plus-size">Plus-size</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Height Slider */}
+          <div className="mb-4">
+            <Label className="text-foreground mb-2">Height: {heightCm} cm</Label>
+            <Slider
+              value={[heightCm]}
+              onValueChange={(v) => setHeightCm(v[0])}
+              min={150}
+              max={200}
+              step={1}
+              className="mt-2"
+            />
+          </div>
+          
+          {/* Skin Tone Dropdown */}
+          <div className="mb-4">
+            <Label className="text-foreground mb-2">Skin Tone</Label>
+            <Select value={skinTone} onValueChange={(value) => setSkinTone(value as typeof skinTone)}>
+              <SelectTrigger className="bg-background border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fair">Fair</SelectItem>
+                <SelectItem value="light">Light</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="olive">Olive</SelectItem>
+                <SelectItem value="tan">Tan</SelectItem>
+                <SelectItem value="brown">Brown</SelectItem>
+                <SelectItem value="dark">Dark</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Hair Description Input */}
+          <div className="mb-4">
+            <Label htmlFor="hair-description" className="text-foreground mb-2">Hair Description</Label>
+            <Input
+              id="hair-description"
+              placeholder="e.g., Long brown wavy hair"
+              value={hairDescription}
+              onChange={(e) => setHairDescription(e.target.value)}
+              className="bg-background border-border"
+            />
+          </div>
+          
+          {/* Additional Notes Textarea */}
+          <div>
+            <Label htmlFor="additional-notes" className="text-foreground mb-2">Additional Notes (Optional)</Label>
+            <Textarea
+              id="additional-notes"
+              placeholder="Any other distinctive features or characteristics..."
+              value={additionalNotes}
+              onChange={(e) => setAdditionalNotes(e.target.value)}
+              rows={3}
+              className="bg-background border-border resize-none"
+            />
+          </div>
+        </Card>
+
         {/* Photo Upload */}
         <div>
           <Label className="text-foreground mb-2">
-            Photos (1-3 required)
+            Photos (minimum 3 required)
           </Label>
           
           {photos.length < 3 && (
@@ -262,7 +384,7 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
                     </div>
                     
                     <p className="text-sm text-foreground-secondary mt-3">
-                      {3 - photos.length} more photo{3 - photos.length !== 1 ? "s" : ""} allowed
+                      {3 - photos.length} more photo{3 - photos.length !== 1 ? "s" : ""} needed
                     </p>
                   </div>
                 </div>
@@ -305,14 +427,19 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
           <Button
             onClick={handleSave}
             className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-            disabled={!name.trim() || photos.length === 0 || isCompressing}
+            disabled={!name.trim() || photos.length < 3 || isCompressing || isGeneratingPortrait}
           >
-            {isCompressing ? 'Compressing images...' : 'Save Model'}
+            {isGeneratingPortrait 
+              ? 'Generating AI portrait...' 
+              : isCompressing 
+              ? 'Compressing images...' 
+              : 'Create Model'}
           </Button>
           <Button
             onClick={onCancel}
             variant="outline"
             className="flex-1 border-border hover:bg-secondary"
+            disabled={isGeneratingPortrait}
           >
             Cancel
           </Button>
