@@ -151,9 +151,7 @@ const PhotoEnhance = () => {
           mode,
           modelId: mode === 'virtual-tryon' ? selectedModelId : undefined,
           photoStyle: mode === 'virtual-tryon' ? photoStyle : undefined,
-          backgroundType: mode === 'virtual-tryon' && selectedModelId.length === 36
-            ? backgroundType 
-            : undefined
+          backgroundType: mode === 'virtual-tryon' ? backgroundType : undefined
         }
       });
 
@@ -166,7 +164,7 @@ const PhotoEnhance = () => {
       const message = mode === 'enhance'
         ? 'Photo enhanced successfully!'
         : `Virtual try-on created with ${modelName} in ${photoStyle} style${
-            backgroundType && selectedModelId.length === 36 ? ` on ${backgroundType} background` : ''
+            backgroundType ? ` on ${backgroundType} background` : ''
           }!`;
       
       toast.success(message);
