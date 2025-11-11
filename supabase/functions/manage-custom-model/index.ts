@@ -105,16 +105,29 @@ Portrait Specifications:
 - Professional studio portrait photography
 - Clean white or neutral background (seamless backdrop)
 - Three-point studio lighting — soft, even, flattering
-- Camera: Full-frame DSLR, 85mm portrait lens, f/2.8
-- Composition: Upper body visible (head, shoulders, chest), centered framing
+- Camera: Full-frame DSLR, 50mm lens, f/2.8 (suitable for full-body portraits)
+- Composition: Full body visible (head to feet), standing pose, centered framing
+- Show complete body proportions from head to toes
+- Model standing naturally with full outfit visible
 - Expression: Natural, confident, friendly — suitable for fashion modeling
-- Clothing: Simple, elegant top in neutral color (white, black, beige)
+- Clothing: Simple, elegant full outfit in neutral colors (white, black, beige) — top and pants/skirt
+- Entire outfit should be visible to show body proportions accurately
 - Styling: Professional but approachable — suitable for e-commerce fashion photography
+
+Full Body Requirements:
+- MUST show complete figure from head to feet
+- Standing pose with natural posture
+- Arms at sides or naturally positioned
+- Full body proportions clearly visible
+- Legs and feet included in frame
+- Appropriate distance to show entire body while maintaining detail
 
 CRITICAL BODY TYPE MATCHING:
 - Replicate the exact body type from reference images: ${bodyType}
 - Match shoulder width, body frame, and overall proportions precisely
 - Maintain height proportions for ${heightCm}cm stature
+- FULL BODY must be visible to accurately represent ${bodyType} proportions
+- Show complete figure including legs, waist-to-hip ratio, and overall body shape
 - NO idealization, slimming, or modification of body shape
 - The portrait must show the same physical build as in the reference photos
 
@@ -341,16 +354,29 @@ Portrait Specifications:
 - Professional studio portrait photography
 - Clean white or neutral background (seamless backdrop)
 - Three-point studio lighting — soft, even, flattering
-- Camera: Full-frame DSLR, 85mm portrait lens, f/2.8
-- Composition: Upper body visible (head, shoulders, chest), centered framing
+- Camera: Full-frame DSLR, 50mm lens, f/2.8 (suitable for full-body portraits)
+- Composition: Full body visible (head to feet), standing pose, centered framing
+- Show complete body proportions from head to toes
+- Model standing naturally with full outfit visible
 - Expression: Natural, confident, friendly — suitable for fashion modeling
-- Clothing: Simple, elegant top in neutral color (white, black, beige)
+- Clothing: Simple, elegant full outfit in neutral colors (white, black, beige) — top and pants/skirt
+- Entire outfit should be visible to show body proportions accurately
 - Styling: Professional but approachable — suitable for e-commerce fashion photography
+
+Full Body Requirements:
+- MUST show complete figure from head to feet
+- Standing pose with natural posture
+- Arms at sides or naturally positioned
+- Full body proportions clearly visible
+- Legs and feet included in frame
+- Appropriate distance to show entire body while maintaining detail
 
 CRITICAL BODY TYPE MATCHING:
 - Replicate the exact body type from reference images: ${model.body_type}
 - Match shoulder width, body frame, and overall proportions precisely
 - Maintain height proportions for ${model.height_cm}cm stature
+- FULL BODY must be visible to accurately represent ${model.body_type} proportions
+- Show complete figure including legs, waist-to-hip ratio, and overall body shape
 - NO idealization, slimming, or modification of body shape
 - The portrait must show the same physical build as in the reference photos
 
