@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import imageCompression from "browser-image-compression";
 import { CameraPreviewDialog } from "@/components/photo/CameraPreviewDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CustomModelCreatorProps {
   onSave: (name: string, photos: string[]) => void;
@@ -14,6 +15,7 @@ interface CustomModelCreatorProps {
 }
 
 const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
+  const isMobile = useIsMobile();
   const [name, setName] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -244,17 +246,19 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
                         Browse
                       </Button>
                       
-                      <Button
-                        type="button"
-                        variant="default"
-                        size="sm"
-                        onClick={() => document.getElementById('camera-input')?.click()}
-                        disabled={photos.length >= 3 || isCompressing}
-                        className="gap-2"
-                      >
-                        <Camera className="w-4 h-4" />
-                        Take Photo
-                      </Button>
+                      {isMobile && (
+                        <Button
+                          type="button"
+                          variant="default"
+                          size="sm"
+                          onClick={() => document.getElementById('camera-input')?.click()}
+                          disabled={photos.length >= 3 || isCompressing}
+                          className="gap-2"
+                        >
+                          <Camera className="w-4 h-4" />
+                          Take Photo
+                        </Button>
+                      )}
                     </div>
                     
                     <p className="text-sm text-foreground-secondary mt-3">

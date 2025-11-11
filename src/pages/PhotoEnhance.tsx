@@ -16,10 +16,12 @@ import { CustomModel, PhotoStyle, BackgroundType } from "@/types/models";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMigrateLocalStorage } from "@/hooks/useMigrateLocalStorage";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const PhotoEnhance = () => {
   const { session, user } = useAuth();
   useMigrateLocalStorage();
+  const isMobile = useIsMobile();
   
   const [isDragging, setIsDragging] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -291,15 +293,17 @@ const PhotoEnhance = () => {
                         Browse Files
                       </Button>
                       
-                      <Button
-                        type="button"
-                        variant="default"
-                        onClick={() => document.getElementById('camera-input')?.click()}
-                        className="gap-2"
-                      >
-                        <Camera className="w-4 h-4" />
-                        Take Photo
-                      </Button>
+                      {isMobile && (
+                        <Button
+                          type="button"
+                          variant="default"
+                          onClick={() => document.getElementById('camera-input')?.click()}
+                          className="gap-2"
+                        >
+                          <Camera className="w-4 h-4" />
+                          Take Photo
+                        </Button>
+                      )}
                     </div>
                     
                     <p className="text-sm text-foreground-secondary mt-4">
