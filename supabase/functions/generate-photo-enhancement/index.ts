@@ -54,7 +54,9 @@ serve(async (req) => {
     let referenceImages: any[] = [];
 
     if (mode === 'enhance') {
-      prompt = `Task: Enhance the provided image of a garment to achieve premium, professional product-photography quality while perfectly preserving the garment's original look, color, fabric texture, stitching, and design details.
+      prompt = `CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
+
+Task: Enhance the provided image of a garment to achieve premium, professional product-photography quality while perfectly preserving the garment's original look, color, fabric texture, stitching, and design details.
 
 Required Enhancements:
 
@@ -70,7 +72,9 @@ Detail Preservation: Maintain every small stitching detail, button, tag, label, 
 
 Format & Composition: Generate the output in perfect square aspect ratio (1:1) with dimensions 1536×1536 pixels. Center the garment naturally within the frame with balanced margins on all sides, ensuring the entire item is fully visible and professionally presented.
 
-Goal: Deliver a high-end, e-commerce-ready product image suitable for use in online stores, fashion catalogs, and professional retail listings — sharp, clean, and realistic with flawless presentation.`;
+Goal: Deliver a high-end, e-commerce-ready product image suitable for use in online stores, fashion catalogs, and professional retail listings — sharp, clean, and realistic with flawless presentation.
+
+CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels. Do not deviate from this format.`;
     } else if (mode === 'virtual-tryon') {
       const isCustomModel = modelId && modelId.length === 36;
       console.log('Virtual try-on mode - modelId:', modelId, 'isCustomModel:', isCustomModel);
@@ -129,7 +133,9 @@ Goal: Deliver a high-end, e-commerce-ready product image suitable for use in onl
       }
 
       const stylePrompts = {
-        studio: `Ultra-realistic professional fashion photography of a woman wearing exactly the same clothing item as shown in the reference image — every fabric detail, texture, and color must be perfectly matched and faithfully reproduced.
+        studio: `CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
+
+Ultra-realistic professional fashion photography of a woman wearing exactly the same clothing item as shown in the reference image — every fabric detail, texture, and color must be perfectly matched and faithfully reproduced.
 
 Style: High-end studio photoshoot with professional lighting and realistic skin tones.
 
@@ -157,8 +163,12 @@ ${isCustomModel ? `CRITICAL: Use the provided reference images to EXACTLY replic
 - Skin tone, facial features, hair style and color — reproduce faithfully
 - Overall size and build — NO idealization or modification
 
-The generated model MUST look like the same person from the reference photos with the same body type and proportions. Do not create a generic model.` : ''}`,
-        selfie: `Realistic mirror selfie photo of a young woman wearing exactly the same clothing item as shown in the reference image — all colors, textures, and garment details must be perfectly accurate and true to life.
+The generated model MUST look like the same person from the reference photos with the same body type and proportions. Do not create a generic model.` : ''}
+
+CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exactly. Do not deviate from this format.`,
+        selfie: `CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
+
+Realistic mirror selfie photo of a young woman wearing exactly the same clothing item as shown in the reference image — all colors, textures, and garment details must be perfectly accurate and true to life.
 
 Style: Casual, authentic mirror-selfie aesthetic captured indoors with natural lighting.
 
@@ -185,7 +195,9 @@ ${isCustomModel ? `CRITICAL: The model in the selfie must be the EXACT same pers
 - Maintain shoulder width, waist, hips, and leg proportions from reference photos
 - NO modifications, idealization, or changes to the model's appearance
 
-This must look like a real selfie of the person in the reference photos wearing the garment — authentic body type and realistic proportions are mandatory.` : ''}`
+This must look like a real selfie of the person in the reference photos wearing the garment — authentic body type and realistic proportions are mandatory.` : ''}
+
+CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exactly. Do not deviate from this format.`
       };
 
       prompt = stylePrompts[photoStyle as keyof typeof stylePrompts] || stylePrompts.studio;
