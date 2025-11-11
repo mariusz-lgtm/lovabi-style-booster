@@ -154,24 +154,45 @@ export type Database = {
       }
       user_models: {
         Row: {
+          additional_notes: string | null
+          age: number | null
+          body_type: string | null
           created_at: string | null
+          generated_portrait_path: string | null
+          hair_description: string | null
+          height_cm: number | null
           id: string
           is_active: boolean | null
           name: string
+          skin_tone: string | null
           user_id: string
         }
         Insert: {
+          additional_notes?: string | null
+          age?: number | null
+          body_type?: string | null
           created_at?: string | null
+          generated_portrait_path?: string | null
+          hair_description?: string | null
+          height_cm?: number | null
           id?: string
           is_active?: boolean | null
           name: string
+          skin_tone?: string | null
           user_id: string
         }
         Update: {
+          additional_notes?: string | null
+          age?: number | null
+          body_type?: string | null
           created_at?: string | null
+          generated_portrait_path?: string | null
+          hair_description?: string | null
+          height_cm?: number | null
           id?: string
           is_active?: boolean | null
           name?: string
+          skin_tone?: string | null
           user_id?: string
         }
         Relationships: [
