@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Upload, Camera, Sparkles, Download, RotateCcw, Coins } from "lucide-react";
+import { Upload, Camera, Sparkles, Download, RotateCcw, Coins, Image as ImageIcon } from "lucide-react";
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -309,6 +311,63 @@ const PhotoEnhance = () => {
     toast.success('Image downloaded successfully!');
   };
 
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        // Remove data:image/...;base64, prefix
+        const base64Data = base64.split(',')[1];
+        resolve(base64Data);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const handleSaveToGallery = async () => {
+    if (!enhancedImage) return;
+    
+    const platform = Capacitor.getPlatform();
+    
+    if (platform === 'ios' || platform === 'android') {
+      try {
+        toast.info('Saving to gallery...');
+        
+        // Fetch image as blob
+        const response = await fetch(enhancedImage);
+        const blob = await response.blob();
+        
+        // Convert to base64
+        const base64Data = await blobToBase64(blob);
+        
+        // Generate filename
+        const fileName = `lovabi-${mode}-${Date.now()}.jpg`;
+        
+        // Save to device filesystem
+        const result = await Filesystem.writeFile({
+          path: `Lovabi/${fileName}`,
+          data: base64Data,
+          directory: Directory.Documents,
+          recursive: true
+        });
+        
+        toast.success('Image saved successfully! Check your Photos app.');
+      } catch (error: any) {
+        console.error('Error saving to gallery:', error);
+        
+        if (error.message?.includes('permission') || error.message?.includes('denied')) {
+          toast.error('Permission denied. Please enable storage access in your device settings.');
+        } else {
+          toast.error('Failed to save image. Please try again.');
+        }
+      }
+    } else {
+      // Fallback to browser download for web
+      handleDownload();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -488,14 +547,25 @@ const PhotoEnhance = () => {
                       <Sparkles className="w-5 h-5" />
                       Generate Again
                     </Button>
-                    <Button
-                      onClick={handleDownload}
-                      size="lg"
-                      className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
-                    >
-                      <Download className="w-5 h-5" />
-                      Download
-                    </Button>
+                    {isMobile ? (
+                      <Button
+                        onClick={handleSaveToGallery}
+                        size="lg"
+                        className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-105"
+                      >
+                        <ImageIcon className="w-5 h-5" />
+                        Save to Gallery
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleDownload}
+                        size="lg"
+                        className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-105"
+                      >
+                        <Download className="w-5 h-5" />
+                        Download
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
