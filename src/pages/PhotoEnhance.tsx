@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Upload, Camera, Sparkles, Download, RotateCcw, Coins, Image as ImageIcon } from "lucide-react";
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Media } from '@capacitor-community/media';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -341,25 +342,26 @@ const PhotoEnhance = () => {
         // Convert to base64
         const base64Data = await blobToBase64(blob);
         
-        // Generate filename
-        const fileName = `lovabi-${mode}-${Date.now()}.jpg`;
+        // Create base64 URI for Media plugin
+        const base64Uri = `data:image/jpeg;base64,${base64Data}`;
         
-        // Save to external storage (Pictures folder - shows in gallery)
-        await Filesystem.writeFile({
-          path: `Pictures/Lovabi/${fileName}`,
-          data: base64Data,
-          directory: Directory.ExternalStorage,
-          recursive: true
+        // Save to photo gallery using Media plugin
+        // On iOS: saves to Camera Roll without album
+        // On Android: saves to default gallery
+        await Media.savePhoto({
+          path: base64Uri
         });
         
         toast.success('Image saved to your photo gallery!');
       } catch (error: any) {
         console.error('Error saving to gallery:', error);
         
-        if (error.message?.includes('permission') || error.message?.includes('denied')) {
+        if (error.message?.includes('permission') || error.message?.includes('denied') || error.code === 'accessDenied') {
           toast.error('Permission denied. Please enable gallery access in settings.');
         } else {
-          toast.error('Failed to save image to gallery.');
+          toast.error('Failed to save image to gallery. Downloading instead...');
+          // Fallback to download if save fails
+          handleDownload();
         }
       }
     } else {
