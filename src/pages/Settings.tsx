@@ -5,6 +5,7 @@ import SecuritySection from "@/components/settings/SecuritySection";
 import AccountSection from "@/components/settings/AccountSection";
 import PlanSection from "@/components/settings/PlanSection";
 import CreditTransactionsSection from "@/components/settings/CreditTransactionsSection";
+import { CookieSettingsSection } from "@/components/settings/CookieSettingsSection";
 
 const Settings = () => {
   return (
@@ -20,11 +21,12 @@ const Settings = () => {
           </p>
 
           <Tabs defaultValue="profile" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="security">Security</TabsTrigger>
               <TabsTrigger value="plan">Plan</TabsTrigger>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              <TabsTrigger value="cookies">Cookies</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
             </TabsList>
 
@@ -42,6 +44,10 @@ const Settings = () => {
 
             <TabsContent value="transactions">
               <CreditTransactionsSection />
+            </TabsContent>
+
+            <TabsContent value="cookies">
+              <CookieSettingsSection />
             </TabsContent>
 
             <TabsContent value="account">
