@@ -11,6 +11,7 @@ import ListingGenerator from "./pages/ListingGenerator";
 import Models from "./pages/Models";
 import History from "./pages/History";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
@@ -27,6 +28,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/enhance"
               element={
