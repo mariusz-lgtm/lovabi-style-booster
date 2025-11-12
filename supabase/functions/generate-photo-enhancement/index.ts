@@ -1,16 +1,28 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Image } from "https://deno.land/x/imagescript@1.3.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to compress images before upload (reduces size by ~50-70%)
+// Helper function to compress images before upload (reduces size by ~70-90%)
 async function compressImageBuffer(buffer: Uint8Array): Promise<Uint8Array> {
-  // For now, we keep the same buffer but this prevents 413 errors
-  // Future enhancement: implement actual JPEG conversion for better compression
-  return buffer;
+  try {
+    // Decode PNG image
+    const image = await Image.decode(buffer);
+    
+    // Resize to 1024x1024 (reduces size by ~55%)
+    image.resize(1024, 1024);
+    
+    // Encode as JPEG with 60% quality (further reduces size by ~70-90% total)
+    return await image.encodeJPEG(60);
+  } catch (error) {
+    console.error('Image compression failed, using original buffer:', error);
+    // Fallback to original buffer if compression fails
+    return buffer;
+  }
 }
 
 serve(async (req) => {
@@ -325,12 +337,17 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
       c => c.charCodeAt(0)
     );
 
-    console.log('Original output image size:', outputImageBuffer.length, 'bytes');
+    const originalSize = outputImageBuffer.length;
+    console.log('Original output image size:', originalSize, 'bytes (~' + (originalSize / 1024 / 1024).toFixed(2) + ' MB)');
     
     // Compress image before upload to prevent 413 errors
-    console.log('Compressing output image...');
+    console.log('Compressing output image (resize 1536→1024 + JPEG 60% quality)...');
+    // @ts-ignore - Type incompatibility between Uint8Array<ArrayBuffer> and Uint8Array<ArrayBufferLike>
     outputImageBuffer = await compressImageBuffer(outputImageBuffer);
-    console.log('Compressed output image size:', outputImageBuffer.length, 'bytes');
+    const compressedSize = outputImageBuffer.length;
+    const compressionRatio = ((1 - compressedSize / originalSize) * 100).toFixed(1);
+    console.log('Compressed output image size:', compressedSize, 'bytes (~' + (compressedSize / 1024 / 1024).toFixed(2) + ' MB)');
+    console.log('Compression ratio:', compressionRatio + '% reduction');
 
     const { error: outputUploadError } = await supabaseClient.storage
       .from('generated-images')
