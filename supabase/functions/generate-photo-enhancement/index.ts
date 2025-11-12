@@ -1,29 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Image } from "https://deno.land/x/imagescript@1.3.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Helper function to compress images before upload (reduces size by ~70-90%)
-async function compressImageBuffer(buffer: Uint8Array): Promise<Uint8Array> {
-  try {
-    // Decode PNG image
-    const image = await Image.decode(buffer);
-    
-    // Resize to 1024x1024 (reduces size by ~55%)
-    image.resize(1024, 1024);
-    
-    // Encode as JPEG with 60% quality (further reduces size by ~70-90% total)
-    return await image.encodeJPEG(60);
-  } catch (error) {
-    console.error('Image compression failed, using original buffer:', error);
-    // Fallback to original buffer if compression fails
-    return buffer;
-  }
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -49,6 +30,17 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
+    // Deduct credit atomically (prevents race conditions)
+    const { data: deductResult, error: deductError } = await supabaseClient
+      .rpc('deduct_credit', { p_user_id: user.id });
+
+    if (deductError || !deductResult) {
+      console.error('Failed to deduct credit:', deductError);
+      throw new Error('Insufficient credits or failed to deduct credit');
+    }
+
+    console.log('Credit deducted successfully for user:', user.id);
+
     const { imageBase64, mode, modelId, photoStyle, backgroundType } = await req.json();
 
     if (!imageBase64 || !mode) {
@@ -59,8 +51,6 @@ serve(async (req) => {
 
     const inputFileName = `${user.id}/${Date.now()}.jpg`;
     const inputImageBuffer = Uint8Array.from(atob(imageBase64.split(',')[1]), c => c.charCodeAt(0));
-    
-    console.log('Input image size:', inputImageBuffer.length, 'bytes (~' + (inputImageBuffer.length / 1024 / 1024).toFixed(2) + ' MB)');
     
     const { error: uploadError } = await supabaseClient.storage
       .from('input-images')
@@ -333,76 +323,24 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
     }
 
     console.log('Converting and uploading generated image to storage...');
-    const outputFileName = `${user.id}/${Date.now()}_output.jpg`;
-    let outputImageBuffer = Uint8Array.from(
+    const outputFileName = `${user.id}/${Date.now()}_output.png`;
+    const outputImageBuffer = Uint8Array.from(
       atob(generatedImageBase64.split(',')[1]), 
       c => c.charCodeAt(0)
     );
 
-    const originalSize = outputImageBuffer.length;
-    console.log('Original output image size:', originalSize, 'bytes (~' + (originalSize / 1024 / 1024).toFixed(2) + ' MB)');
-    
-    // Compress image before upload to prevent 413 errors
-    console.log('Compressing output image (resize 1536→1024 + JPEG 60% quality)...');
-    // @ts-ignore - Type incompatibility between Uint8Array<ArrayBuffer> and Uint8Array<ArrayBufferLike>
-    outputImageBuffer = await compressImageBuffer(outputImageBuffer);
-    const compressedSize = outputImageBuffer.length;
-    const compressionRatio = ((1 - compressedSize / originalSize) * 100).toFixed(1);
-    console.log('Compressed output image size:', compressedSize, 'bytes (~' + (compressedSize / 1024 / 1024).toFixed(2) + ' MB)');
-    console.log('Compression ratio:', compressionRatio + '% reduction');
+    console.log('Output image size:', outputImageBuffer.length, 'bytes');
 
-    // Upload with auto-retry on 413 error
-    let outputUploadError = null;
-    let uploadSuccess = false;
-    
-    const { error: firstUploadError } = await supabaseClient.storage
+    const { error: outputUploadError } = await supabaseClient.storage
       .from('generated-images')
       .upload(outputFileName, outputImageBuffer, {
-        contentType: 'image/jpeg',
+        contentType: 'image/png',
         upsert: true
       });
 
-    if (firstUploadError) {
-      // Check if it's a 413 error (object too large)
-      if (firstUploadError.message?.includes('413') || firstUploadError.message?.includes('exceeded')) {
-        console.log('Upload failed with 413 - retrying with stronger compression (768×768 + JPEG 50%)...');
-        
-        try {
-          // Decode and re-compress with more aggressive settings
-          const image = await Image.decode(outputImageBuffer);
-          image.resize(768, 768);
-          const ultraCompressedBuffer = await image.encodeJPEG(50);
-          
-          const ultraCompressedSize = ultraCompressedBuffer.length;
-          console.log('Ultra-compressed output size:', ultraCompressedSize, 'bytes (~' + (ultraCompressedSize / 1024 / 1024).toFixed(2) + ' MB)');
-          
-          const { error: retryUploadError } = await supabaseClient.storage
-            .from('generated-images')
-            .upload(outputFileName, ultraCompressedBuffer, {
-              contentType: 'image/jpeg',
-              upsert: true
-            });
-          
-          if (!retryUploadError) {
-            uploadSuccess = true;
-            console.log('Retry upload successful after stronger compression');
-          } else {
-            outputUploadError = retryUploadError;
-          }
-        } catch (retryError) {
-          console.error('Retry compression/upload failed:', retryError);
-          outputUploadError = firstUploadError;
-        }
-      } else {
-        outputUploadError = firstUploadError;
-      }
-    } else {
-      uploadSuccess = true;
-    }
-
-    if (!uploadSuccess) {
-      console.error('Error uploading output image:', outputUploadError);
-      throw new Error('Failed to upload generated image');
+    if (outputUploadError) {
+      console.error('Failed to upload generated image:', outputUploadError);
+      throw new Error('Failed to save generated image');
     }
 
     console.log('Image uploaded successfully:', outputFileName);
@@ -410,19 +348,6 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
     const { data: urlData } = supabaseClient.storage
       .from('generated-images')
       .getPublicUrl(outputFileName);
-
-    // Deduct credit ONLY after successful image generation and upload
-    console.log('Deducting credit after successful generation and upload...');
-    const { data: deductResult, error: deductError } = await supabaseClient
-      .rpc('deduct_credit', { p_user_id: user.id });
-
-    if (deductError || !deductResult) {
-      console.error('Failed to deduct credit after successful generation:', deductError);
-      // Image was generated successfully but credit deduction failed - log but don't throw
-      console.error('WARNING: Image generated but credit not deducted for user:', user.id);
-    } else {
-      console.log('Credit deducted successfully after generation for user:', user.id);
-    }
 
     const generationTime = Date.now() - startTime;
     console.log('Total generation time:', generationTime, 'ms');

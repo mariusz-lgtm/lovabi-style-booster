@@ -7,7 +7,6 @@ import Header from "@/components/layout/Header";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import imageCompression from "browser-image-compression";
 import ModeSelector from "@/components/photo/ModeSelector";
 import ModelSelector from "@/components/photo/ModelSelector";
 import PhotoStyleSelector from "@/components/photo/PhotoStyleSelector";
@@ -34,7 +33,6 @@ const PhotoEnhance = () => {
   const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
   const [mode, setMode] = useState<"enhance" | "virtual-tryon">("enhance");
   const [isLoading, setIsLoading] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState("emma");
   const [photoStyle, setPhotoStyle] = useState<PhotoStyle>("studio");
   const [backgroundType, setBackgroundType] = useState<BackgroundType>("white");
@@ -140,98 +138,24 @@ const PhotoEnhance = () => {
     setIsDragging(false);
   };
 
-  const compressImage = async (file: File): Promise<File> => {
-    const options = {
-      maxSizeMB: 2,
-      maxWidthOrHeight: 1536,
-      useWebWorker: true,
-      fileType: 'image/jpeg',
-      initialQuality: 0.85
-    };
-
-    try {
-      console.log('Original file size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
-      const compressedFile = await imageCompression(file, options);
-      console.log('Compressed file size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
-      return compressedFile;
-    } catch (error) {
-      console.error('Error compressing image:', error);
-      toast.error('Failed to compress image');
-      throw error;
-    }
-  };
-
-  const handleDrop = async (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    
-    if (!file) return;
-    
-    if (!file.type.startsWith("image/")) {
-      toast.error('Please select a valid image file');
-      return;
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (e) => setSelectedImage(e.target?.result as string);
+      reader.readAsDataURL(file);
     }
-    
-    // Hard limit: 10 MB
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image too large (max 10 MB). Please choose a smaller file.');
-      return;
-    }
-    
-    let processedFile = file;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.info('Image is large, compressing for faster processing...');
-      setIsCompressing(true);
-      try {
-        processedFile = await compressImage(file);
-        toast.success('Image compressed successfully!');
-      } catch (error) {
-        toast.error('Failed to compress image. Please try a smaller file.');
-        setIsCompressing(false);
-        return;
-      }
-      setIsCompressing(false);
-    }
-    
-    const reader = new FileReader();
-    reader.onloadend = () => setSelectedImage(reader.result as string);
-    reader.readAsDataURL(processedFile);
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
-      return;
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => setSelectedImage(e.target?.result as string);
+      reader.readAsDataURL(file);
     }
-    
-    // Hard limit: 10 MB
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image too large (max 10 MB). Please choose a smaller file.');
-      return;
-    }
-    
-    let processedFile = file;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.info('Image is large, compressing for faster processing...');
-      setIsCompressing(true);
-      try {
-        processedFile = await compressImage(file);
-        toast.success('Image compressed successfully!');
-      } catch (error) {
-        toast.error('Failed to compress image. Please try a smaller file.');
-        setIsCompressing(false);
-        return;
-      }
-      setIsCompressing(false);
-    }
-    
-    const reader = new FileReader();
-    reader.onloadend = () => setSelectedImage(reader.result as string);
-    reader.readAsDataURL(processedFile);
   };
 
   const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -277,7 +201,6 @@ const PhotoEnhance = () => {
     }
 
     setIsLoading(true);
-    setEnhancedImage(null); // Clear previous result to prevent showing stale image on error
 
     try {
       const { data, error } = await supabase.functions.invoke('generate-photo-enhancement', {
