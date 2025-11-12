@@ -23,22 +23,33 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Ban, ShieldCheck, Search } from 'lucide-react';
+import { Ban, ShieldCheck, Search, Plus, Coins } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [banDialogOpen, setBanDialogOpen] = useState(false);
+  const [addCreditsDialogOpen, setAddCreditsDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [banReason, setBanReason] = useState('');
+  const [creditsAmount, setCreditsAmount] = useState(10);
 
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['admin-users', searchTerm],
     queryFn: async () => {
       let query = supabase
         .from('profiles')
-        .select('id, email, full_name, country, created_at, is_banned, banned_at, banned_reason')
+        .select('id, email, full_name, country, created_at, is_banned, banned_at, banned_reason, credits')
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
@@ -98,6 +109,34 @@ const AdminUsers = () => {
     }
   };
 
+  const handleAddCredits = async () => {
+    if (!selectedUserId || creditsAmount < 1 || creditsAmount > 1000) {
+      toast.error('Please enter a valid amount (1-1000)');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.functions.invoke('admin-actions', {
+        body: {
+          action: 'add-credits',
+          userId: selectedUserId,
+          amount: creditsAmount,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(`${creditsAmount} credits added successfully`);
+      setAddCreditsDialogOpen(false);
+      setCreditsAmount(10);
+      setSelectedUserId(null);
+      refetch();
+    } catch (error: any) {
+      console.error('Error adding credits:', error);
+      toast.error(error.message || 'Failed to add credits');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -127,6 +166,7 @@ const AdminUsers = () => {
               <TableHead>Email</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Country</TableHead>
+              <TableHead>Credits</TableHead>
               <TableHead>Joined</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
@@ -139,6 +179,12 @@ const AdminUsers = () => {
                 <TableCell>{user.full_name || '-'}</TableCell>
                 <TableCell>{user.country || '-'}</TableCell>
                 <TableCell>
+                  <Badge variant="secondary" className="gap-1">
+                    <Coins className="h-3 w-3" />
+                    {user.credits ?? 0}
+                  </Badge>
+                </TableCell>
+                <TableCell>
                   {new Date(user.created_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
@@ -150,6 +196,17 @@ const AdminUsers = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                        setAddCreditsDialogOpen(true);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Credits
+                    </Button>
                     {user.is_banned ? (
                       <Button
                         size="sm"
@@ -200,6 +257,37 @@ const AdminUsers = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={addCreditsDialogOpen} onOpenChange={setAddCreditsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Credits to User</DialogTitle>
+            <DialogDescription>
+              Enter the amount of credits to add to this user's account
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="credits">Credits Amount</Label>
+              <Input
+                id="credits"
+                type="number"
+                min="1"
+                max="1000"
+                value={creditsAmount}
+                onChange={(e) => setCreditsAmount(parseInt(e.target.value) || 0)}
+                placeholder="Enter amount (1-1000)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddCreditsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddCredits}>Add Credits</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

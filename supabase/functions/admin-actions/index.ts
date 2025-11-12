@@ -158,6 +158,42 @@ Deno.serve(async (req) => {
         });
       }
 
+      case 'add-credits': {
+        const { action, userId, generationId, reason, amount } = await req.json();
+        
+        if (!userId || !amount || amount < 1 || amount > 1000) {
+          return new Response(JSON.stringify({ error: 'Invalid userId or amount' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Fetch current credits
+        const { data: profileData, error: fetchError } = await supabaseAdmin
+          .from('profiles')
+          .select('credits')
+          .eq('id', userId)
+          .single();
+
+        if (fetchError) throw fetchError;
+
+        const newCredits = (profileData.credits || 0) + amount;
+
+        // Update credits
+        const { error: updateError } = await supabaseAdmin
+          .from('profiles')
+          .update({ credits: newCredits })
+          .eq('id', userId);
+
+        if (updateError) throw updateError;
+
+        console.log(`Added ${amount} credits to user:`, userId);
+        return new Response(
+          JSON.stringify({ success: true, message: `Added ${amount} credits` }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       default:
         return new Response(JSON.stringify({ error: 'Invalid action' }), {
           status: 400,

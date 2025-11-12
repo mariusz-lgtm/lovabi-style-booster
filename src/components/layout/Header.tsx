@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import CreditsDisplay from "@/components/layout/CreditsDisplay";
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -59,12 +60,14 @@ const Header = () => {
             )}
             
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <User className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
+              <>
+                <CreditsDisplay />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <User className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
@@ -82,6 +85,7 @@ const Header = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </>
             ) : (
               <Link to="/auth">
                 <Button variant="outline" size="sm">

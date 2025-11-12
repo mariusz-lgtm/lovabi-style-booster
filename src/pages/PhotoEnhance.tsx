@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import { Upload, Camera, Sparkles, Download, RotateCcw } from "lucide-react";
+import { Upload, Camera, Sparkles, Download, RotateCcw, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Header from "@/components/layout/Header";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import ModeSelector from "@/components/photo/ModeSelector";
 import ModelSelector from "@/components/photo/ModelSelector";
 import PhotoStyleSelector from "@/components/photo/PhotoStyleSelector";
@@ -22,6 +25,8 @@ const PhotoEnhance = () => {
   const { session, user } = useAuth();
   useMigrateLocalStorage();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   const [isDragging, setIsDragging] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -183,6 +188,18 @@ const PhotoEnhance = () => {
       return;
     }
 
+    // Check credits before processing
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', user!.id)
+      .single();
+
+    if (!profile || profile.credits < 1) {
+      toast.error('Not enough credits! You need 1 credit to generate an image.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -200,13 +217,25 @@ const PhotoEnhance = () => {
 
       setEnhancedImage(data.imageUrl);
       
+      // Refetch credits to update display
+      queryClient.invalidateQueries({ queryKey: ['user-credits'] });
+      
+      // Get updated credits for toast message
+      const { data: updatedProfile } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', user!.id)
+        .single();
+      
+      const remainingCredits = updatedProfile?.credits ?? 0;
+      
       const modelName = customModels.find(m => m.id === selectedModelId)?.name 
         || selectedModelId.charAt(0).toUpperCase() + selectedModelId.slice(1);
       const message = mode === 'enhance'
-        ? 'Photo enhanced successfully!'
+        ? `Photo enhanced successfully! ${remainingCredits} credits remaining.`
         : `Virtual try-on created with ${modelName} in ${photoStyle} style${
             backgroundType ? ` on ${backgroundType} background` : ''
-          }!`;
+          }! ${remainingCredits} credits remaining.`;
       
       toast.success(message);
     } catch (error: any) {
@@ -381,6 +410,9 @@ const PhotoEnhance = () => {
                     >
                       <Sparkles className="w-5 h-5" />
                       {mode === "enhance" ? "Enhance Photo" : "Dress on Model"}
+                      <Badge variant="secondary" className="ml-2 bg-background/50">
+                        <Coins className="w-3 h-3 mr-1" />1 credit
+                      </Badge>
                     </Button>
                     <Button
                       onClick={handleReset}

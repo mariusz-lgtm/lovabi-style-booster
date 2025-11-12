@@ -30,6 +30,17 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
+    // Deduct credit atomically (prevents race conditions)
+    const { data: deductResult, error: deductError } = await supabaseClient
+      .rpc('deduct_credit', { p_user_id: user.id });
+
+    if (deductError || !deductResult) {
+      console.error('Failed to deduct credit:', deductError);
+      throw new Error('Insufficient credits or failed to deduct credit');
+    }
+
+    console.log('Credit deducted successfully for user:', user.id);
+
     const { imageBase64, mode, modelId, photoStyle, backgroundType } = await req.json();
 
     if (!imageBase64 || !mode) {
