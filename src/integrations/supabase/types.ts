@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      credit_transactions: {
+        Row: {
+          balance_after: number
+          created_at: string | null
+          created_by: string | null
+          delta: number
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          balance_after: number
+          created_at?: string | null
+          created_by?: string | null
+          delta: number
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          balance_after?: number
+          created_at?: string | null
+          created_by?: string | null
+          delta?: number
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       generation_history: {
         Row: {
           background_used: string | null

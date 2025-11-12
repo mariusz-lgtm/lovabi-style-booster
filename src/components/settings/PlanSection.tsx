@@ -19,7 +19,7 @@ const PlanSection = () => {
         .from('profiles')
         .select('credits')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching credits:', error);

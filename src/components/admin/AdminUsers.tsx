@@ -33,8 +33,9 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Ban, ShieldCheck, Search, Plus, Coins } from 'lucide-react';
+import { Ban, ShieldCheck, Search, Plus, Coins, History } from 'lucide-react';
 import { toast } from 'sonner';
+import AdminUserTransactions from './AdminUserTransactions';
 
 const AdminUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,6 +44,8 @@ const AdminUsers = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [banReason, setBanReason] = useState('');
   const [creditsAmount, setCreditsAmount] = useState(10);
+  const [transactionsDialogOpen, setTransactionsDialogOpen] = useState(false);
+  const [selectedUserForTransactions, setSelectedUserForTransactions] = useState<{ id: string; email: string } | null>(null);
 
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['admin-users', searchTerm],
@@ -207,6 +210,17 @@ const AdminUsers = () => {
                       <Plus className="h-4 w-4 mr-1" />
                       Add Credits
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedUserForTransactions({ id: user.id, email: user.email || '' });
+                        setTransactionsDialogOpen(true);
+                      }}
+                    >
+                      <History className="h-4 w-4 mr-1" />
+                      Transactions
+                    </Button>
                     {user.is_banned ? (
                       <Button
                         size="sm"
@@ -288,6 +302,13 @@ const AdminUsers = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AdminUserTransactions
+        userId={selectedUserForTransactions?.id || null}
+        userEmail={selectedUserForTransactions?.email || ''}
+        open={transactionsDialogOpen}
+        onOpenChange={setTransactionsDialogOpen}
+      />
     </div>
   );
 };
