@@ -129,6 +129,7 @@ export type Database = {
           banned_reason: string | null
           country: string | null
           created_at: string | null
+          credits: number
           email: string | null
           full_name: string | null
           id: string
@@ -141,6 +142,7 @@ export type Database = {
           banned_reason?: string | null
           country?: string | null
           created_at?: string | null
+          credits?: number
           email?: string | null
           full_name?: string | null
           id: string
@@ -153,6 +155,7 @@ export type Database = {
           banned_reason?: string | null
           country?: string | null
           created_at?: string | null
+          credits?: number
           email?: string | null
           full_name?: string | null
           id?: string
@@ -240,6 +243,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      deduct_credit: { Args: { p_user_id: string }; Returns: boolean }
       get_active_model: {
         Args: { p_user_id: string }
         Returns: {
