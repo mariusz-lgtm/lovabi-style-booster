@@ -259,49 +259,77 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
       }
     ];
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
-        messages: aiMessages,
-        modalities: ["image", "text"]
-      })
-    });
+    console.log('Calling Lovable AI for image generation...');
+    console.log('Mode:', mode, 'Model:', modelId, 'Style:', photoStyle, 'Background:', backgroundType);
+    console.log('Reference images count:', referenceImages.length);
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+    // Create abort controller for timeout (120 seconds)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
+
+    let response;
+    try {
+      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-image",
+          messages: aiMessages,
+          modalities: ["image", "text"]
+        }),
+        signal: controller.signal
+      });
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.error('AI generation timed out after 120 seconds');
+        throw new Error('Image generation timed out. Please try again with a smaller image or different settings.');
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Payment required. Please add credits to your workspace." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
-      throw new Error('AI generation failed');
+      console.error('Network error during AI call:', fetchError);
+      throw new Error('Network error during image generation. Please check your connection and try again.');
     }
 
+    clearTimeout(timeoutId);
+    console.log('AI response received, status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('AI gateway error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        throw new Error("Rate limit exceeded. Please try again in a moment.");
+      }
+      if (response.status === 402) {
+        throw new Error("Payment required. Please contact support.");
+      }
+      if (response.status === 413) {
+        throw new Error("Image too large. Please use a smaller image.");
+      }
+      
+      throw new Error(`AI generation failed with status ${response.status}`);
+    }
+
+    console.log('Parsing AI response...');
     const data = await response.json();
+    console.log('AI response parsed successfully');
     const generatedImageBase64 = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
     if (!generatedImageBase64) {
-      throw new Error('No image generated');
+      console.error('No image in AI response. Response structure:', JSON.stringify(data).substring(0, 500));
+      throw new Error('No image generated from AI');
     }
 
+    console.log('Converting and uploading generated image to storage...');
     const outputFileName = `${user.id}/${Date.now()}_output.png`;
     const outputImageBuffer = Uint8Array.from(
       atob(generatedImageBase64.split(',')[1]), 
       c => c.charCodeAt(0)
     );
+
+    console.log('Output image size:', outputImageBuffer.length, 'bytes');
 
     const { error: outputUploadError } = await supabaseClient.storage
       .from('generated-images')
@@ -310,15 +338,22 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
         upsert: true
       });
 
-    if (outputUploadError) throw outputUploadError;
+    if (outputUploadError) {
+      console.error('Failed to upload generated image:', outputUploadError);
+      throw new Error('Failed to save generated image');
+    }
+
+    console.log('Image uploaded successfully:', outputFileName);
 
     const { data: urlData } = supabaseClient.storage
       .from('generated-images')
       .getPublicUrl(outputFileName);
 
     const generationTime = Date.now() - startTime;
+    console.log('Total generation time:', generationTime, 'ms');
 
-    await supabaseClient.from('generation_history').insert({
+    console.log('Saving to generation history...');
+    const { error: historyError } = await supabaseClient.from('generation_history').insert({
       user_id: user.id,
       model_used: modelId || 'enhance',
       style_used: photoStyle || mode,
@@ -328,6 +363,12 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
       generation_time_ms: generationTime
     });
 
+    if (historyError) {
+      console.error('Failed to save generation history:', historyError);
+      // Don't throw - the image was generated successfully, just history logging failed
+    }
+
+    console.log('Generation completed successfully');
     return new Response(
       JSON.stringify({
         imageUrl: urlData.publicUrl,
@@ -338,8 +379,9 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
 
   } catch (error) {
     console.error('Error in generate-photo-enhancement:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error occurred during image generation' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
