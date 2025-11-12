@@ -344,22 +344,22 @@ const PhotoEnhance = () => {
         // Generate filename
         const fileName = `lovabi-${mode}-${Date.now()}.jpg`;
         
-        // Save to device filesystem
-        const result = await Filesystem.writeFile({
-          path: `Lovabi/${fileName}`,
+        // Save to external storage (Pictures folder - shows in gallery)
+        await Filesystem.writeFile({
+          path: `Pictures/Lovabi/${fileName}`,
           data: base64Data,
-          directory: Directory.Documents,
+          directory: Directory.ExternalStorage,
           recursive: true
         });
         
-        toast.success('Image saved successfully! Check your Photos app.');
+        toast.success('Image saved to your photo gallery!');
       } catch (error: any) {
         console.error('Error saving to gallery:', error);
         
         if (error.message?.includes('permission') || error.message?.includes('denied')) {
-          toast.error('Permission denied. Please enable storage access in your device settings.');
+          toast.error('Permission denied. Please enable gallery access in settings.');
         } else {
-          toast.error('Failed to save image. Please try again.');
+          toast.error('Failed to save image to gallery.');
         }
       }
     } else {
