@@ -323,31 +323,70 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
     }
 
     console.log('Converting and uploading generated image to storage...');
-    const outputFileName = `${user.id}/${Date.now()}_output.png`;
+    const baseFileName = `${user.id}/${Date.now()}_output`;
     const outputImageBuffer = Uint8Array.from(
       atob(generatedImageBase64.split(',')[1]), 
       c => c.charCodeAt(0)
     );
 
-    console.log('Output image size:', outputImageBuffer.length, 'bytes');
+    console.log('Output image size (PNG):', outputImageBuffer.length, 'bytes (~' + (outputImageBuffer.length / 1024 / 1024).toFixed(2) + ' MB)');
 
-    const { error: outputUploadError } = await supabaseClient.storage
+    // Try uploading PNG first (best quality)
+    let finalFileName = baseFileName + '.png';
+    let finalContentType = 'image/png';
+    let uploadBuffer = outputImageBuffer;
+
+    const { error: pngUploadError } = await supabaseClient.storage
       .from('generated-images')
-      .upload(outputFileName, outputImageBuffer, {
-        contentType: 'image/png',
+      .upload(finalFileName, uploadBuffer, {
+        contentType: finalContentType,
         upsert: true
       });
 
-    if (outputUploadError) {
-      console.error('Failed to upload generated image:', outputUploadError);
+    // If PNG upload fails with 413 (too large), fallback to high-quality JPEG
+    if (pngUploadError && pngUploadError.message?.includes('exceeded maximum size')) {
+      console.log('PNG too large, converting to high-quality JPEG (85% quality, 1280px)...');
+      
+      try {
+        const { Image } = await import('https://deno.land/x/imagescript@1.3.0/mod.ts');
+        
+        const decodedImage = await Image.decode(outputImageBuffer);
+        const resizedImage = decodedImage.resize(1280, 1280);
+        const jpegBuffer = await resizedImage.encodeJPEG(85); // 85% quality
+        
+        finalFileName = baseFileName + '.jpg';
+        finalContentType = 'image/jpeg';
+        uploadBuffer = new Uint8Array(jpegBuffer); // Convert to proper Uint8Array
+        
+        console.log('Compressed JPEG size:', uploadBuffer.length, 'bytes (~' + (uploadBuffer.length / 1024 / 1024).toFixed(2) + ' MB)');
+        
+        const { error: jpegUploadError } = await supabaseClient.storage
+          .from('generated-images')
+          .upload(finalFileName, uploadBuffer, {
+            contentType: finalContentType,
+            upsert: true
+          });
+        
+        if (jpegUploadError) {
+          console.error('Failed to upload compressed JPEG:', jpegUploadError);
+          throw new Error('Failed to save generated image after compression');
+        }
+        
+        console.log('Compressed image uploaded successfully as JPEG:', finalFileName);
+      } catch (compressionError) {
+        console.error('Compression failed:', compressionError);
+        throw new Error('Failed to compress and upload generated image');
+      }
+    } else if (pngUploadError) {
+      console.error('Failed to upload PNG:', pngUploadError);
       throw new Error('Failed to save generated image');
+    } else {
+      console.log('PNG image uploaded successfully:', finalFileName);
     }
-
-    console.log('Image uploaded successfully:', outputFileName);
 
     const { data: urlData } = supabaseClient.storage
       .from('generated-images')
-      .getPublicUrl(outputFileName);
+      .getPublicUrl(finalFileName);
 
     const generationTime = Date.now() - startTime;
     console.log('Total generation time:', generationTime, 'ms');
@@ -359,7 +398,7 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
       style_used: photoStyle || mode,
       background_used: backgroundType,
       input_image_path: inputFileName,
-      output_image_path: outputFileName,
+      output_image_path: finalFileName,
       generation_time_ms: generationTime
     });
 

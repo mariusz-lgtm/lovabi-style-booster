@@ -7,6 +7,7 @@ import Header from "@/components/layout/Header";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import imageCompression from 'browser-image-compression';
 import ModeSelector from "@/components/photo/ModeSelector";
 import ModelSelector from "@/components/photo/ModelSelector";
 import PhotoStyleSelector from "@/components/photo/PhotoStyleSelector";
@@ -138,23 +139,66 @@ const PhotoEnhance = () => {
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const compressImage = async (file: File): Promise<File> => {
+    const fileSizeMB = file.size / 1024 / 1024;
+    
+    // Hard limit: reject files over 8 MB
+    if (fileSizeMB > 8) {
+      throw new Error('Image file is too large (>8 MB). Please use a smaller image.');
+    }
+    
+    // No compression for files under 3 MB (preserve original quality)
+    if (fileSizeMB <= 3) {
+      console.log('File under 3 MB, no compression needed:', fileSizeMB.toFixed(2), 'MB');
+      return file;
+    }
+    
+    // Compress files over 3 MB with high quality settings
+    console.log('Compressing image:', fileSizeMB.toFixed(2), 'MB');
+    toast.info('Optimizing image for professional quality...');
+    
+    const options = {
+      maxSizeMB: 3,
+      maxWidthOrHeight: 2048,
+      useWebWorker: true,
+      fileType: 'image/jpeg',
+      initialQuality: 0.92, // Very high quality (92%)
+    };
+    
+    const compressedFile = await imageCompression(file, options);
+    const compressedSizeMB = compressedFile.size / 1024 / 1024;
+    console.log('Compressed size:', compressedSizeMB.toFixed(2), 'MB');
+    
+    return compressedFile;
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (e) => setSelectedImage(e.target?.result as string);
-      reader.readAsDataURL(file);
+      try {
+        const processedFile = await compressImage(file);
+        const reader = new FileReader();
+        reader.onload = (e) => setSelectedImage(e.target?.result as string);
+        reader.readAsDataURL(processedFile);
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to process image');
+      }
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => setSelectedImage(e.target?.result as string);
-      reader.readAsDataURL(file);
+      try {
+        const processedFile = await compressImage(file);
+        const reader = new FileReader();
+        reader.onload = (e) => setSelectedImage(e.target?.result as string);
+        reader.readAsDataURL(processedFile);
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to process image');
+      }
     }
   };
 
