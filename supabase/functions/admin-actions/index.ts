@@ -55,8 +55,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { action, userId, generationId, reason } = await req.json();
-    console.log('Admin action:', action, { userId, generationId, reason });
+    const body = await req.json();
+    const { action, userId, generationId, reason, amount } = body;
+    console.log('Admin action:', action, { userId, generationId, reason, amount });
 
     switch (action) {
       case 'ban-user': {
@@ -159,8 +160,6 @@ Deno.serve(async (req) => {
       }
 
       case 'add-credits': {
-        const { action, userId, generationId, reason, amount } = await req.json();
-        
         if (!userId || !amount || amount < 1 || amount > 1000) {
           return new Response(JSON.stringify({ error: 'Invalid userId or amount' }), {
             status: 400,
@@ -177,15 +176,28 @@ Deno.serve(async (req) => {
 
         if (fetchError) throw fetchError;
 
-        const newCredits = (profileData.credits || 0) + amount;
+        const newBalance = (profileData.credits || 0) + amount;
 
         // Update credits
         const { error: updateError } = await supabaseAdmin
           .from('profiles')
-          .update({ credits: newCredits })
+          .update({ credits: newBalance })
           .eq('id', userId);
 
         if (updateError) throw updateError;
+
+        // Log the transaction
+        const { error: logError } = await supabaseAdmin
+          .from('credit_transactions')
+          .insert({
+            user_id: userId,
+            reason: `Admin added credits${reason ? `: ${reason}` : ''}`,
+            delta: amount,
+            balance_after: newBalance,
+            created_by: user.id,
+          });
+
+        if (logError) console.error('Error logging transaction:', logError);
 
         console.log(`Added ${amount} credits to user:`, userId);
         return new Response(

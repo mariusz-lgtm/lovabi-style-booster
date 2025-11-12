@@ -193,9 +193,9 @@ const PhotoEnhance = () => {
       .from('profiles')
       .select('credits')
       .eq('id', user!.id)
-      .single();
+      .maybeSingle();
 
-    if (!profile || profile.credits < 1) {
+    if (!profile || (profile.credits ?? 0) < 1) {
       toast.error('Not enough credits! You need 1 credit to generate an image.');
       return;
     }
@@ -218,14 +218,14 @@ const PhotoEnhance = () => {
       setEnhancedImage(data.imageUrl);
       
       // Refetch credits to update display
-      queryClient.invalidateQueries({ queryKey: ['user-credits'] });
+      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
       
       // Get updated credits for toast message
       const { data: updatedProfile } = await supabase
         .from('profiles')
         .select('credits')
         .eq('id', user!.id)
-        .single();
+        .maybeSingle();
       
       const remainingCredits = updatedProfile?.credits ?? 0;
       
