@@ -58,19 +58,9 @@ serve(async (req) => {
     const startTime = Date.now();
 
     const inputFileName = `${user.id}/${Date.now()}.jpg`;
-    let inputImageBuffer = Uint8Array.from(atob(imageBase64.split(',')[1]), c => c.charCodeAt(0));
+    const inputImageBuffer = Uint8Array.from(atob(imageBase64.split(',')[1]), c => c.charCodeAt(0));
     
-    const originalInputSize = inputImageBuffer.length;
-    console.log('Input image original size:', originalInputSize, 'bytes (~' + (originalInputSize / 1024 / 1024).toFixed(2) + ' MB)');
-    
-    // Compress input image before upload (resize 1024×1024 + JPEG 60%)
-    console.log('Compressing input image (resize 1024×1024 + JPEG 60% quality)...');
-    // @ts-ignore - Type incompatibility between Uint8Array<ArrayBuffer> and Uint8Array<ArrayBufferLike>
-    inputImageBuffer = await compressImageBuffer(inputImageBuffer);
-    const compressedInputSize = inputImageBuffer.length;
-    const inputCompressionRatio = ((1 - compressedInputSize / originalInputSize) * 100).toFixed(1);
-    console.log('Compressed input image size:', compressedInputSize, 'bytes (~' + (compressedInputSize / 1024 / 1024).toFixed(2) + ' MB)');
-    console.log('Input compression ratio:', inputCompressionRatio + '% reduction');
+    console.log('Input image size:', inputImageBuffer.length, 'bytes (~' + (inputImageBuffer.length / 1024 / 1024).toFixed(2) + ' MB)');
     
     const { error: uploadError } = await supabaseClient.storage
       .from('input-images')
