@@ -58,7 +58,19 @@ serve(async (req) => {
     const startTime = Date.now();
 
     const inputFileName = `${user.id}/${Date.now()}.jpg`;
-    const inputImageBuffer = Uint8Array.from(atob(imageBase64.split(',')[1]), c => c.charCodeAt(0));
+    let inputImageBuffer = Uint8Array.from(atob(imageBase64.split(',')[1]), c => c.charCodeAt(0));
+    
+    const originalInputSize = inputImageBuffer.length;
+    console.log('Input image original size:', originalInputSize, 'bytes (~' + (originalInputSize / 1024 / 1024).toFixed(2) + ' MB)');
+    
+    // Compress input image before upload (resize 1024×1024 + JPEG 60%)
+    console.log('Compressing input image (resize 1024×1024 + JPEG 60% quality)...');
+    // @ts-ignore - Type incompatibility between Uint8Array<ArrayBuffer> and Uint8Array<ArrayBufferLike>
+    inputImageBuffer = await compressImageBuffer(inputImageBuffer);
+    const compressedInputSize = inputImageBuffer.length;
+    const inputCompressionRatio = ((1 - compressedInputSize / originalInputSize) * 100).toFixed(1);
+    console.log('Compressed input image size:', compressedInputSize, 'bytes (~' + (compressedInputSize / 1024 / 1024).toFixed(2) + ' MB)');
+    console.log('Input compression ratio:', inputCompressionRatio + '% reduction');
     
     const { error: uploadError } = await supabaseClient.storage
       .from('input-images')
@@ -349,16 +361,58 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
     console.log('Compressed output image size:', compressedSize, 'bytes (~' + (compressedSize / 1024 / 1024).toFixed(2) + ' MB)');
     console.log('Compression ratio:', compressionRatio + '% reduction');
 
-    const { error: outputUploadError } = await supabaseClient.storage
+    // Upload with auto-retry on 413 error
+    let outputUploadError = null;
+    let uploadSuccess = false;
+    
+    const { error: firstUploadError } = await supabaseClient.storage
       .from('generated-images')
       .upload(outputFileName, outputImageBuffer, {
         contentType: 'image/jpeg',
         upsert: true
       });
 
-    if (outputUploadError) {
-      console.error('Failed to upload generated image:', outputUploadError);
-      throw new Error('Failed to save generated image');
+    if (firstUploadError) {
+      // Check if it's a 413 error (object too large)
+      if (firstUploadError.message?.includes('413') || firstUploadError.message?.includes('exceeded')) {
+        console.log('Upload failed with 413 - retrying with stronger compression (768×768 + JPEG 50%)...');
+        
+        try {
+          // Decode and re-compress with more aggressive settings
+          const image = await Image.decode(outputImageBuffer);
+          image.resize(768, 768);
+          const ultraCompressedBuffer = await image.encodeJPEG(50);
+          
+          const ultraCompressedSize = ultraCompressedBuffer.length;
+          console.log('Ultra-compressed output size:', ultraCompressedSize, 'bytes (~' + (ultraCompressedSize / 1024 / 1024).toFixed(2) + ' MB)');
+          
+          const { error: retryUploadError } = await supabaseClient.storage
+            .from('generated-images')
+            .upload(outputFileName, ultraCompressedBuffer, {
+              contentType: 'image/jpeg',
+              upsert: true
+            });
+          
+          if (!retryUploadError) {
+            uploadSuccess = true;
+            console.log('Retry upload successful after stronger compression');
+          } else {
+            outputUploadError = retryUploadError;
+          }
+        } catch (retryError) {
+          console.error('Retry compression/upload failed:', retryError);
+          outputUploadError = firstUploadError;
+        }
+      } else {
+        outputUploadError = firstUploadError;
+      }
+    } else {
+      uploadSuccess = true;
+    }
+
+    if (!uploadSuccess) {
+      console.error('Error uploading output image:', outputUploadError);
+      throw new Error('Failed to upload generated image');
     }
 
     console.log('Image uploaded successfully:', outputFileName);

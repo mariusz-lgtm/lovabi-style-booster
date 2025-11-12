@@ -201,6 +201,7 @@ const PhotoEnhance = () => {
     }
 
     setIsLoading(true);
+    setEnhancedImage(null); // Clear previous result to prevent showing stale image on error
 
     try {
       const { data, error } = await supabase.functions.invoke('generate-photo-enhancement', {
