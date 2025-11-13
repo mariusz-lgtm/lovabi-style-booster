@@ -43,6 +43,14 @@ serve(async (req) => {
 
     const { imageBase64, mode, modelId, modelGender, photoStyle, backgroundType } = await req.json();
 
+    console.log('🔍 DEBUG - Request parameters:', { 
+      mode, 
+      modelId, 
+      modelGender, 
+      photoStyle, 
+      backgroundType 
+    });
+
     if (!imageBase64 || !mode) {
       throw new Error('Missing required fields: imageBase64, mode');
     }
