@@ -185,6 +185,23 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels. Do
 
 Ultra-realistic professional fashion photography of a ${gender === 'male' ? 'man' : 'woman'} wearing exactly the same clothing item as shown in the reference image — every fabric detail, texture, and color must be perfectly matched and faithfully reproduced.
 
+GARMENT FIDELITY RULES — CRITICAL & NON-NEGOTIABLE:
+- Reproduce the clothing item EXACTLY as shown in the reference image — perfect 1:1 replica
+- DO NOT add ANY elements that are not visible in the original garment:
+  * NO additional buttons, zippers, pockets, or closures
+  * NO decorative elements, embellishments, or embroidery
+  * NO cutouts, slits, or design modifications
+  * NO pattern variations or fabric texture changes
+- Match every visible detail precisely:
+  * Exact stitch lines, seams, collar shape, cuff design, hemline
+  * Identical fabric pattern, texture, weave, and finish
+  * Same number and placement of any existing details
+- If the reference shows NO decorative elements → generate NO decorative elements
+- If the reference shows specific details → replicate them EXACTLY as shown
+- The generated garment must be indistinguishable from the reference — nothing added, nothing removed, nothing modified
+
+This is a CRITICAL requirement: The AI must act as a perfect replicator, not a designer.
+
 Style: High-end studio photoshoot with professional lighting and realistic skin tones.
 
 Background (depends on backgroundType):
@@ -226,6 +243,23 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
         selfie: `CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
 
 Realistic mirror selfie photo of a young ${gender === 'male' ? 'man' : 'woman'} wearing exactly the same clothing item as shown in the reference image — all colors, textures, and garment details must be perfectly accurate and true to life.
+
+GARMENT FIDELITY RULES — CRITICAL & NON-NEGOTIABLE:
+- Reproduce the clothing item EXACTLY as shown in the reference image — perfect 1:1 replica
+- DO NOT add ANY elements that are not visible in the original garment:
+  * NO additional buttons, zippers, pockets, or closures
+  * NO decorative elements, embellishments, or embroidery
+  * NO cutouts, slits, or design modifications
+  * NO pattern variations or fabric texture changes
+- Match every visible detail precisely:
+  * Exact stitch lines, seams, collar shape, cuff design, hemline
+  * Identical fabric pattern, texture, weave, and finish
+  * Same number and placement of any existing details
+- If the reference shows NO decorative elements → generate NO decorative elements
+- If the reference shows specific details → replicate them EXACTLY as shown
+- The generated garment must be indistinguishable from the reference — nothing added, nothing removed, nothing modified
+
+This is a CRITICAL requirement: The AI must act as a perfect replicator, not a designer.
 
 Style: Casual, authentic mirror-selfie aesthetic captured indoors with natural lighting.
 
