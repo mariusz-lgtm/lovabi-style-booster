@@ -22,7 +22,21 @@ const History = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data || [];
+
+      // Generate signed URLs for private bucket access
+      const generationsWithUrls = await Promise.all(
+        (data || []).map(async (item: any) => {
+          if (item.output_image_path) {
+            const { data: signed } = await supabase.storage
+              .from('generated-images')
+              .createSignedUrl(item.output_image_path, 3600);
+            return { ...item, imageUrl: signed?.signedUrl ?? null };
+          }
+          return { ...item, imageUrl: null };
+        })
+      );
+
+      return generationsWithUrls;
     },
     enabled: !!user
   });
@@ -67,11 +81,13 @@ const History = () => {
 
   const handleDownload = async (imagePath: string, historyId: string) => {
     try {
-      const { data: urlData } = supabase.storage
+      const { data: signed } = await supabase.storage
         .from('generated-images')
-        .getPublicUrl(imagePath);
+        .createSignedUrl(imagePath, 300); // short-lived URL for download
+
+      if (!signed?.signedUrl) throw new Error('Could not create signed URL');
       
-      const response = await fetch(urlData.publicUrl);
+      const response = await fetch(signed.signedUrl);
       if (!response.ok) {
         throw new Error('Failed to fetch image');
       }
@@ -159,18 +175,20 @@ const History = () => {
         {!isLoading && history.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {history.map((item: any) => {
-              const imageUrl = supabase.storage
-                .from('generated-images')
-                .getPublicUrl(item.output_image_path).data.publicUrl;
+              const imageUrl = item.imageUrl as string | null;
 
               return (
                 <Card key={item.id} className="group overflow-hidden hover:shadow-lg transition-all duration-300">
                   <div className="aspect-square relative overflow-hidden bg-muted">
-                    <img
-                      src={imageUrl}
-                      alt="Generated"
-                      className="w-full h-full object-cover"
-                    />
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt="Generated"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted" />
+                    )}
                   </div>
                   <div className="p-4 space-y-3">
                     <div className="flex flex-wrap gap-2">

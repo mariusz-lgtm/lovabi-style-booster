@@ -471,9 +471,9 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
       console.log('PNG image uploaded successfully:', finalFileName);
     }
 
-    const { data: urlData } = supabaseClient.storage
+    const { data: signed } = await supabaseClient.storage
       .from('generated-images')
-      .getPublicUrl(finalFileName);
+      .createSignedUrl(finalFileName, 3600);
 
     const generationTime = Date.now() - startTime;
     console.log('Total generation time:', generationTime, 'ms');
@@ -497,7 +497,8 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
     console.log('Generation completed successfully');
     return new Response(
       JSON.stringify({
-        imageUrl: urlData.publicUrl,
+        imageUrl: signed?.signedUrl,
+        path: finalFileName,
         generationTime
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
