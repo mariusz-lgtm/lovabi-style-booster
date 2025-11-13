@@ -41,7 +41,7 @@ serve(async (req) => {
 
     console.log('Credit deducted successfully for user:', user.id);
 
-    const { imageBase64, mode, modelId, photoStyle, backgroundType } = await req.json();
+    const { imageBase64, mode, modelId, modelGender, photoStyle, backgroundType } = await req.json();
 
     if (!imageBase64 || !mode) {
       throw new Error('Missing required fields: imageBase64, mode');
@@ -145,19 +145,46 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels. Do
         console.log('Successfully added generated portrait as reference image');
       }
 
+      const gender = modelGender || 'female';
+      let backgroundContext = '';
+      switch (backgroundType) {
+        case 'white':
+          backgroundContext = gender === 'male' 
+            ? 'Clean white studio backdrop, professional minimalist setting for male fashion'
+            : 'Clean white studio backdrop, professional minimalist setting';
+          break;
+        case 'outdoor':
+          backgroundContext = gender === 'male'
+            ? 'Urban outdoor setting (city street, modern architecture, park), natural daylight, masculine aesthetic'
+            : 'Elegant outdoor setting (garden, terrace, urban park), natural daylight';
+          break;
+        case 'studio-grey':
+          backgroundContext = gender === 'male'
+            ? 'Modern grey studio backdrop with professional lighting, contemporary masculine style'
+            : 'Elegant grey studio backdrop with soft professional lighting';
+          break;
+        case 'home-interior':
+          backgroundContext = gender === 'male'
+            ? 'Modern home interior (living room, office, loft), contemporary masculine style, natural window light'
+            : 'Elegant home interior (living room, bedroom, bright space), warm and inviting';
+          break;
+        default:
+          backgroundContext = 'Clean white studio backdrop';
+      }
+
       const stylePrompts = {
         studio: `CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
 
-Ultra-realistic professional fashion photography of a woman wearing exactly the same clothing item as shown in the reference image — every fabric detail, texture, and color must be perfectly matched and faithfully reproduced.
+Ultra-realistic professional fashion photography of a ${gender === 'male' ? 'man' : 'woman'} wearing exactly the same clothing item as shown in the reference image — every fabric detail, texture, and color must be perfectly matched and faithfully reproduced.
 
 Style: High-end studio photoshoot with professional lighting and realistic skin tones.
 
 Background (depends on backgroundType):
-${backgroundType === 'white' ? '"white" → Pure white seamless backdrop for e-commerce look.' : ''}
-${backgroundType === 'studio-grey' ? '"studio-grey" → Smooth neutral grey studio backdrop for balanced tones.' : ''}
-${backgroundType === 'outdoor' ? '"outdoor" → Natural outdoor setting with soft daylight, realistic shadows.' : ''}
-${backgroundType === 'home-interior' ? '"home-interior" → Modern home interior with natural window light, cozy atmosphere.' : ''}
-${!backgroundType || (backgroundType !== 'white' && backgroundType !== 'studio-grey' && backgroundType !== 'outdoor' && backgroundType !== 'home-interior') ? 'default → Pure white seamless backdrop with professional studio lighting.' : ''}
+${backgroundType === 'white' ? `"white" → ${backgroundContext}` : ''}
+${backgroundType === 'studio-grey' ? `"studio-grey" → ${backgroundContext}` : ''}
+${backgroundType === 'outdoor' ? `"outdoor" → ${backgroundContext}` : ''}
+${backgroundType === 'home-interior' ? `"home-interior" → ${backgroundContext}` : ''}
+${!backgroundType || (backgroundType !== 'white' && backgroundType !== 'studio-grey' && backgroundType !== 'outdoor' && backgroundType !== 'home-interior') ? `default → ${backgroundContext}` : ''}
 
 Camera: Shot on a full-frame DSLR with 85mm portrait lens, aperture f/2.8 for shallow depth of field and crisp garment focus.
 
@@ -190,14 +217,14 @@ This portrait was created based on multiple real photos and detailed physical de
 CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exactly. Do not deviate from this format.`,
         selfie: `CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
 
-Realistic mirror selfie photo of a young woman wearing exactly the same clothing item as shown in the reference image — all colors, textures, and garment details must be perfectly accurate and true to life.
+Realistic mirror selfie photo of a young ${gender === 'male' ? 'man' : 'woman'} wearing exactly the same clothing item as shown in the reference image — all colors, textures, and garment details must be perfectly accurate and true to life.
 
 Style: Casual, authentic mirror-selfie aesthetic captured indoors with natural lighting.
 
 Background (depends on backgroundType):
-${backgroundType === 'white' ? '"white" → Clean white wall or minimalist mirror reflection.' : ''}
-${backgroundType === 'home-interior' ? '"home-interior" → Cozy bedroom or stylish living room with soft daylight.' : ''}
-${backgroundType === 'outdoor' ? '"outdoor" → Mirror placed outdoors (e.g. garden or street), casual fashion vibe.' : ''}
+${backgroundType === 'white' ? `"white" → ${gender === 'male' ? 'Clean white wall or minimalist mirror reflection, modern masculine setting.' : 'Clean white wall or minimalist mirror reflection.'}` : ''}
+${backgroundType === 'home-interior' ? `"home-interior" → ${gender === 'male' ? 'Modern bedroom or living room with soft daylight, masculine contemporary style.' : 'Cozy bedroom or stylish living room with soft daylight.'}` : ''}
+${backgroundType === 'outdoor' ? `"outdoor" → ${gender === 'male' ? 'Mirror placed outdoors (e.g. urban setting or park), casual street style vibe.' : 'Mirror placed outdoors (e.g. garden or street), casual fashion vibe.'}` : ''}
 ${!backgroundType || (backgroundType !== 'white' && backgroundType !== 'home-interior' && backgroundType !== 'outdoor') ? 'default → Simple, neutral mirror background with realistic reflections.' : ''}
 
 Camera: Smartphone front or main camera, realistic mirror reflection, slight wide-angle lens, handheld framing, natural exposure and tones.

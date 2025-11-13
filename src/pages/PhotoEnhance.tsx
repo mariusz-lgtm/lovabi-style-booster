@@ -99,7 +99,7 @@ const PhotoEnhance = () => {
           photos: photoUrls.filter(url => url !== ''),
           generatedPortrait,
           createdAt: model.created_at,
-          gender: (model.gender || 'female') as 'female' | 'male'
+          gender: ((model as any).gender || 'female') as 'female' | 'male'
         };
       })
     );
@@ -256,6 +256,16 @@ const PhotoEnhance = () => {
           imageBase64: selectedImage,
           mode,
           modelId: mode === 'virtual-tryon' ? selectedModelId : undefined,
+          modelGender: mode === 'virtual-tryon' ? (() => {
+            // Find the selected model's gender from custom models
+            const customModel = customModels.find(m => m.id === selectedModelId);
+            if (customModel) return customModel.gender;
+            // For predefined models, check the ID
+            // Predefined female models: emma, sofia, maya
+            // Predefined male models: marcus, jake, leo
+            const maleModels = ['marcus', 'jake', 'leo'];
+            return maleModels.includes(selectedModelId) ? 'male' : 'female';
+          })() : undefined,
           photoStyle: mode === 'virtual-tryon' ? photoStyle : undefined,
           backgroundType: mode === 'virtual-tryon' ? backgroundType : undefined
         }

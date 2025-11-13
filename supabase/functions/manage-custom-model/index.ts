@@ -339,7 +339,11 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
         console.log('Original photos downloaded, regenerating AI portrait...');
 
         // Regenerate portrait with same logic as CREATE
-        const portraitPrompt = `Generate a professional studio portrait (headshot and upper body) of a woman based on the provided reference images and description.
+        const genderTerm = model.gender === 'male' ? 'man' : 'woman';
+        const pronounSubject = model.gender === 'male' ? 'him' : 'her';
+        const attire = model.gender === 'male' ? 'Smart casual or business attire (shirt/polo or blazer)' : 'Professional or elegant attire';
+        
+        const portraitPrompt = `Generate a professional studio portrait (headshot and upper body) of a ${genderTerm} based on the provided reference images and description.
 
 CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
 
@@ -349,6 +353,7 @@ Reference Images Analysis:
 - Replicate skin tone, complexion, and any distinctive features faithfully
 
 Physical Description to Match:
+- Gender: ${model.gender}
 - Age: ${model.age} years old
 - Body Type: ${model.body_type} — maintain this exact body type and build
 - Height: ${model.height_cm}cm — ensure proportions match this height
@@ -363,9 +368,9 @@ Portrait Specifications:
 - Camera: Full-frame DSLR, 50mm lens, f/2.8 (suitable for full-body portraits)
 - Composition: Full body visible (head to feet), standing pose, centered framing
 - Show complete body proportions from head to toes
-- Model standing naturally with full outfit visible
+- ${model.gender === 'male' ? 'Male model standing naturally with confident posture' : 'Female model standing naturally with elegant posture'}
 - Expression: Natural, confident, friendly — suitable for fashion modeling
-- Clothing: Simple, elegant full outfit in neutral colors (white, black, beige) — top and pants/skirt
+- Clothing: ${attire} in neutral colors (white, black, beige, navy)
 - Entire outfit should be visible to show body proportions accurately
 - Styling: Professional but approachable — suitable for e-commerce fashion photography
 
