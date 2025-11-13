@@ -91,7 +91,12 @@ serve(async (req) => {
         
         const portraitPrompt = `Generate a professional studio portrait (headshot and upper body) of a ${genderTerm} based on the provided reference images and description.
 
-CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
+CRITICAL FORMAT REQUIREMENTS:
+- Output MUST be PERFECT SQUARE: 1:1 aspect ratio EXACTLY
+- Resolution: 1536×1536 pixels PRECISELY
+- NO cropping, NO letterboxing, NO portrait/landscape orientation
+- Frame composition must be square from the start
+- Non-negotiable requirement
 
 Reference Images Analysis:
 - Use all ${photos.length} provided reference images to accurately capture the person's appearance
@@ -121,12 +126,26 @@ Portrait Specifications:
 - Styling: Professional but approachable — suitable for e-commerce fashion photography
 
 Full Body Requirements:
-- MUST show complete figure from head to feet
-- Standing pose with natural posture
+- CRITICAL: ENTIRE body must be visible — from TOP OF HEAD to BOTTOM OF FEET
+- NO cropping of any body part (head, hands, feet must ALL be in frame)
+- Standing pose with natural posture, centered in square frame
 - Arms at sides or naturally positioned
-- Full body proportions clearly visible
-- Legs and feet included in frame
-- Appropriate distance to show entire body while maintaining detail
+- Full body proportions clearly visible with proper spacing
+- Feet and shoes MUST be fully visible at bottom of frame
+- Head with full hair MUST be visible at top of frame
+- Leave appropriate margin around body (minimum 5% on all sides)
+- Model should occupy ~80-85% of frame height to ensure all details visible
+
+Accessories and Detail Focus:
+- If jewelry (necklaces, bracelets, rings, earrings) is visible in reference photos:
+  * Replicate these accessories in the generated portrait
+  * Ensure jewelry is clearly visible and detailed
+  * Maintain accurate placement and style
+- If distinctive shoes/footwear are identified in reference photos:
+  * Replicate the shoe style accurately
+  * Ensure shoes are fully visible and in focus
+  * Show shoe details clearly (laces, buckles, style)
+- If significant accessories are detected, you may generate focused detail shots of those specific items
 
 CRITICAL BODY TYPE MATCHING:
 - Replicate the exact body type from reference images: ${bodyType}
@@ -142,6 +161,13 @@ Quality & Format:
 - Ultra high-resolution, sharp focus, professional retouching
 - Natural skin tones, realistic lighting, editorial quality
 - This portrait will be used as a reference for virtual clothing try-on
+
+FINAL CRITICAL REMINDERS:
+1. Format: 1:1 SQUARE ONLY — 1536×1536 pixels EXACTLY
+2. Full body: HEAD TO FEET all visible in frame
+3. Accessories: Replicate and detail any jewelry/shoes from reference photos
+4. Quality: Ultra high-resolution, editorial standard
+5. Accuracy: Match reference photos precisely, no idealization
 
 CRITICAL: The generated portrait must look like the EXACT same person from the reference images — same face, same body type, same proportions. Match the physical description provided precisely. NO idealization or significant alteration.
 
@@ -345,7 +371,12 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
         
         const portraitPrompt = `Generate a professional studio portrait (headshot and upper body) of a ${genderTerm} based on the provided reference images and description.
 
-CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
+CRITICAL FORMAT REQUIREMENTS:
+- Output MUST be PERFECT SQUARE: 1:1 aspect ratio EXACTLY
+- Resolution: 1536×1536 pixels PRECISELY
+- NO cropping, NO letterboxing, NO portrait/landscape orientation
+- Frame composition must be square from the start
+- Non-negotiable requirement
 
 Reference Images Analysis:
 - Use all ${photoBase64Array.length} provided reference images to accurately capture the person's appearance
@@ -375,12 +406,26 @@ Portrait Specifications:
 - Styling: Professional but approachable — suitable for e-commerce fashion photography
 
 Full Body Requirements:
-- MUST show complete figure from head to feet
-- Standing pose with natural posture
+- CRITICAL: ENTIRE body must be visible — from TOP OF HEAD to BOTTOM OF FEET
+- NO cropping of any body part (head, hands, feet must ALL be in frame)
+- Standing pose with natural posture, centered in square frame
 - Arms at sides or naturally positioned
-- Full body proportions clearly visible
-- Legs and feet included in frame
-- Appropriate distance to show entire body while maintaining detail
+- Full body proportions clearly visible with proper spacing
+- Feet and shoes MUST be fully visible at bottom of frame
+- Head with full hair MUST be visible at top of frame
+- Leave appropriate margin around body (minimum 5% on all sides)
+- Model should occupy ~80-85% of frame height to ensure all details visible
+
+Accessories and Detail Focus:
+- If jewelry (necklaces, bracelets, rings, earrings) is visible in reference photos:
+  * Replicate these accessories in the generated portrait
+  * Ensure jewelry is clearly visible and detailed
+  * Maintain accurate placement and style
+- If distinctive shoes/footwear are identified in reference photos:
+  * Replicate the shoe style accurately
+  * Ensure shoes are fully visible and in focus
+  * Show shoe details clearly (laces, buckles, style)
+- If significant accessories are detected, you may generate focused detail shots of those specific items
 
 CRITICAL BODY TYPE MATCHING:
 - Replicate the exact body type from reference images: ${model.body_type}
@@ -399,7 +444,12 @@ Quality & Format:
 
 CRITICAL: The generated portrait must look like the EXACT same person from the reference images — same face, same body type, same proportions. Match the physical description provided precisely. NO idealization or significant alteration.
 
-CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exactly.`;
+FINAL CRITICAL REMINDERS:
+1. Format: 1:1 SQUARE ONLY — 1536×1536 pixels EXACTLY
+2. Full body: HEAD TO FEET all visible in frame
+3. Accessories: Replicate and detail any jewelry/shoes from reference photos
+4. Quality: Ultra high-resolution, editorial standard
+5. Accuracy: Match reference photos precisely, no idealization`;
 
         const content = [
           { type: "text", text: portraitPrompt },
