@@ -251,21 +251,40 @@ const PhotoEnhance = () => {
     setIsLoading(true);
 
     try {
+      // Calculate modelGender for debugging and usage
+      const calculatedGender = mode === 'virtual-tryon' ? (() => {
+        // Check for predefined male models first
+        const maleModels = ['marcus', 'jake', 'leo'];
+        if (maleModels.includes(selectedModelId)) return 'male';
+        
+        // Then check custom models
+        const customModel = customModels.find(m => m.id === selectedModelId);
+        if (customModel) return (customModel as any).gender || 'female';
+        
+        // Default to female for predefined female models
+        return 'female';
+      })() : undefined;
+
+      console.log('🔍 DEBUG - Sending to backend:', { 
+        mode, 
+        selectedModelId, 
+        calculatedGender,
+        photoStyle,
+        backgroundType,
+        customModelsCount: customModels.length,
+        customModelsWithGender: customModels.map(m => ({ 
+          id: m.id, 
+          name: m.name, 
+          gender: (m as any).gender 
+        }))
+      });
+
       const { data, error } = await supabase.functions.invoke('generate-photo-enhancement', {
         body: {
           imageBase64: selectedImage,
           mode,
           modelId: mode === 'virtual-tryon' ? selectedModelId : undefined,
-          modelGender: mode === 'virtual-tryon' ? (() => {
-            // Find the selected model's gender from custom models
-            const customModel = customModels.find(m => m.id === selectedModelId);
-            if (customModel) return customModel.gender;
-            // For predefined models, check the ID
-            // Predefined female models: emma, sofia, maya
-            // Predefined male models: marcus, jake, leo
-            const maleModels = ['marcus', 'jake', 'leo'];
-            return maleModels.includes(selectedModelId) ? 'male' : 'female';
-          })() : undefined,
+          modelGender: calculatedGender,
           photoStyle: mode === 'virtual-tryon' ? photoStyle : undefined,
           backgroundType: mode === 'virtual-tryon' ? backgroundType : undefined
         }
