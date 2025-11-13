@@ -270,11 +270,29 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
 
       if (!isCustomModel) {
         const modelPrompts: Record<string, string> = {
+          // Female predefined models
           emma: 'Model appearance: Professional European woman, 25-30 years old, elegant and polished style, brown hair, confident expression.',
           sofia: 'Model appearance: Modern Mediterranean woman, 22-28 years old, contemporary fashion sense, dark wavy hair, warm smile.',
-          maya: 'Model appearance: Young diverse woman, 20-25 years old, trendy street style, various hairstyles, energetic vibe.'
+          maya: 'Model appearance: Young diverse woman, 20-25 years old, trendy street style, various hairstyles, energetic vibe.',
+          // Male predefined models
+          marcus: 'Model appearance: Professional business man, 28-35 years old, short well-groomed hair, subtle stubble optional, confident posture, sharp features, neutral grooming.',
+          jake: 'Model appearance: Casual urban man, 24-32 years old, modern hairstyle, light stubble optional, relaxed confident vibe, contemporary streetwear energy.',
+          leo: 'Model appearance: Athletic sporty man, 22-30 years old, fit build, clean haircut, energetic and dynamic posture, healthy complexion.'
         };
-        prompt += '\n' + (modelPrompts[modelId || ''] || modelPrompts.emma);
+
+        const defaultFemale = 'Model appearance: Professional woman with neutral makeup, clean hairstyle, elegant yet neutral look suitable for try-on.';
+        const defaultMale = 'Model appearance: Professional man with neat grooming, short styled hair, optional light stubble, neutral masculine look suitable for try-on.';
+
+        const chosenPrompt = modelPrompts[modelId || ''];
+        const fallbackPrompt = gender === 'male' ? defaultMale : defaultFemale;
+
+        prompt += '\n' + (chosenPrompt || fallbackPrompt);
+
+        console.log('🔍 DEBUG - Gender-aware model prompt applied:', {
+          modelId,
+          gender,
+          usedPromptKey: chosenPrompt ? modelId : `default-${gender}`
+        });
       }
     }
 
