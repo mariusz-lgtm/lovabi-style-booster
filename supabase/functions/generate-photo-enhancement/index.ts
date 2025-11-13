@@ -75,21 +75,21 @@ serve(async (req) => {
     if (mode === 'enhance') {
       prompt = `CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
 
-Task: Enhance the provided image of a garment to achieve premium, professional product-photography quality while perfectly preserving the garment's original look, color, fabric texture, stitching, and design details.
+Task: Enhance the provided image of a fashion product (clothing, accessories, jewelry, bags, etc.) to achieve premium, professional product-photography quality while perfectly preserving the item's original look, color, texture, and design details.
 
 Required Enhancements:
 
-Wrinkle Removal & Fabric Smoothing: Gently remove all wrinkles, folds, and creases from the garment. Present the clothing as freshly pressed and perfectly shaped, maintaining all natural fabric characteristics and edges.
+Wrinkle Removal & Surface Smoothing: Gently remove all wrinkles, folds, and creases from fabric items. Present the product as pristine and perfectly shaped, maintaining all natural characteristics and edges.
 
 Lighting & Exposure Optimization: Correct lighting to achieve clean, even illumination that mimics a professional studio soft-box setup. Remove any harsh shadows, glare, or underexposed areas for a balanced, natural look.
 
-Color Fidelity & Contrast: Adjust color, contrast, and white balance for true-to-life tones. Ensure the garment's real color, material texture, and fabric weave are accurately represented and vivid, without artificial oversaturation or distortion.
+Color Fidelity & Contrast: Adjust color, contrast, and white balance for true-to-life tones. Ensure the product's real color, material texture, and details are accurately represented and vivid, without artificial oversaturation or distortion.
 
-Background Refinement: Replace or clean up the background to a pure white seamless backdrop (RGB 255,255,255). The background must be smooth, uniform, and non-distracting, ensuring the garment is the only focal point.
+Background Refinement: Replace or clean up the background to a pure white seamless backdrop (RGB 255,255,255). The background must be smooth, uniform, and non-distracting, ensuring the product is the only focal point.
 
-Detail Preservation: Maintain every small stitching detail, button, tag, label, and texture exactly as in the original photo — no visual alteration of the design or structure of the clothing.
+Detail Preservation: Maintain every small detail, button, tag, label, clasp, texture, and design element exactly as in the original photo — no visual alteration of the design or structure.
 
-Format & Composition: Generate the output in perfect square aspect ratio (1:1) with dimensions 1536×1536 pixels. Center the garment naturally within the frame with balanced margins on all sides, ensuring the entire item is fully visible and professionally presented.
+Format & Composition: Generate the output in perfect square aspect ratio (1:1) with dimensions 1536×1536 pixels. Center the product naturally within the frame with balanced margins on all sides, ensuring the entire item is fully visible and professionally presented.
 
 Goal: Deliver a high-end, e-commerce-ready product image suitable for use in online stores, fashion catalogs, and professional retail listings — sharp, clean, and realistic with flawless presentation.
 
@@ -183,11 +183,11 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels. Do
       const stylePrompts = {
         studio: `CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
 
-Ultra-realistic professional fashion photography of a ${gender === 'male' ? 'man' : 'woman'} wearing exactly the same clothing item as shown in the reference image — every fabric detail, texture, and color must be perfectly matched and faithfully reproduced.
+Ultra-realistic professional fashion photography of a ${gender === 'male' ? 'man' : 'woman'} wearing or displaying exactly the same fashion item as shown in the reference image — every detail, texture, and color must be perfectly matched and faithfully reproduced. This includes clothing, accessories, jewelry, bags, or any wearable/fashion product.
 
-GARMENT FIDELITY RULES — CRITICAL & NON-NEGOTIABLE:
-- Reproduce the clothing item EXACTLY as shown in the reference image — perfect 1:1 replica
-- DO NOT add ANY elements that are not visible in the original garment:
+PRODUCT FIDELITY RULES — CRITICAL & NON-NEGOTIABLE:
+- Reproduce the fashion item EXACTLY as shown in the reference image — perfect 1:1 replica
+- DO NOT add ANY elements that are not visible in the original product:
   * NO additional buttons, zippers, pockets, or closures
   * NO decorative elements, embellishments, or embroidery
   * NO cutouts, slits, or design modifications
@@ -198,7 +198,7 @@ GARMENT FIDELITY RULES — CRITICAL & NON-NEGOTIABLE:
   * Same number and placement of any existing details
 - If the reference shows NO decorative elements → generate NO decorative elements
 - If the reference shows specific details → replicate them EXACTLY as shown
-- The generated garment must be indistinguishable from the reference — nothing added, nothing removed, nothing modified
+- The generated product must be indistinguishable from the reference — nothing added, nothing removed, nothing modified
 
 This is a CRITICAL requirement: The AI must act as a perfect replicator, not a designer.
 
@@ -211,7 +211,7 @@ ${backgroundType === 'outdoor' ? `"outdoor" → ${backgroundContext}` : ''}
 ${backgroundType === 'home-interior' ? `"home-interior" → ${backgroundContext}` : ''}
 ${!backgroundType || (backgroundType !== 'white' && backgroundType !== 'studio-grey' && backgroundType !== 'outdoor' && backgroundType !== 'home-interior') ? `default → ${backgroundContext}` : ''}
 
-Camera: Shot on a full-frame DSLR with 85mm portrait lens, aperture f/2.8 for shallow depth of field and crisp garment focus.
+Camera: Shot on a full-frame DSLR with 85mm portrait lens, aperture f/2.8 for shallow depth of field and crisp product focus.
 
 Lighting: Three-point professional studio lighting — soft key light at 45°, gentle fill light, and subtle rim light for separation and dimension.
 
@@ -242,11 +242,11 @@ This portrait was created based on multiple real photos and detailed physical de
 CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exactly. Do not deviate from this format.`,
         selfie: `CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
 
-Realistic mirror selfie photo of a young ${gender === 'male' ? 'man' : 'woman'} wearing exactly the same clothing item as shown in the reference image — all colors, textures, and garment details must be perfectly accurate and true to life.
+Realistic mirror selfie photo of a young ${gender === 'male' ? 'man' : 'woman'} wearing or displaying exactly the same fashion item as shown in the reference image — all colors, textures, and product details must be perfectly accurate and true to life. This includes clothing, accessories, jewelry, bags, or any wearable/fashion product.
 
-GARMENT FIDELITY RULES — CRITICAL & NON-NEGOTIABLE:
-- Reproduce the clothing item EXACTLY as shown in the reference image — perfect 1:1 replica
-- DO NOT add ANY elements that are not visible in the original garment:
+PRODUCT FIDELITY RULES — CRITICAL & NON-NEGOTIABLE:
+- Reproduce the fashion item EXACTLY as shown in the reference image — perfect 1:1 replica
+- DO NOT add ANY elements that are not visible in the original product:
   * NO additional buttons, zippers, pockets, or closures
   * NO decorative elements, embellishments, or embroidery
   * NO cutouts, slits, or design modifications
@@ -257,7 +257,7 @@ GARMENT FIDELITY RULES — CRITICAL & NON-NEGOTIABLE:
   * Same number and placement of any existing details
 - If the reference shows NO decorative elements → generate NO decorative elements
 - If the reference shows specific details → replicate them EXACTLY as shown
-- The generated garment must be indistinguishable from the reference — nothing added, nothing removed, nothing modified
+- The generated product must be indistinguishable from the reference — nothing added, nothing removed, nothing modified
 
 This is a CRITICAL requirement: The AI must act as a perfect replicator, not a designer.
 
