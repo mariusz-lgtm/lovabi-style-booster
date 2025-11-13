@@ -89,7 +89,7 @@ serve(async (req) => {
         const pronounSubject = gender === 'male' ? 'him' : 'her';
         const attire = gender === 'male' ? 'Smart casual or business attire (shirt/polo or blazer)' : 'Professional or elegant attire';
         
-        const portraitPrompt = `Generate a professional studio portrait (headshot and upper body) of a ${genderTerm} based on the provided reference images and description.
+        const portraitPrompt = `Generate a professional full-body studio portrait of a ${genderTerm} based on the provided reference images and description. The portrait must show the complete figure from head to feet in a perfect square 1:1 format.
 
 CRITICAL FORMAT REQUIREMENTS:
 - Output MUST be PERFECT SQUARE: 1:1 aspect ratio EXACTLY
@@ -369,7 +369,7 @@ CRITICAL REMINDER: Output MUST be 1:1 square aspect ratio, 1536×1536 pixels exa
         const pronounSubject = model.gender === 'male' ? 'him' : 'her';
         const attire = model.gender === 'male' ? 'Smart casual or business attire (shirt/polo or blazer)' : 'Professional or elegant attire';
         
-        const portraitPrompt = `Generate a professional studio portrait (headshot and upper body) of a ${genderTerm} based on the provided reference images and description.
+        const portraitPrompt = `Generate a professional full-body studio portrait of a ${genderTerm} based on the provided reference images and description. The portrait must show the complete figure from head to feet in a perfect square 1:1 format.
 
 CRITICAL FORMAT REQUIREMENTS:
 - Output MUST be PERFECT SQUARE: 1:1 aspect ratio EXACTLY
