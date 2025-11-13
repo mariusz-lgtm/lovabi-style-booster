@@ -79,6 +79,7 @@ const Models = () => {
           photos: photoUrls.filter(url => url !== ''),
           generatedPortrait,
           createdAt: model.created_at,
+          gender: model.gender || 'female',
           age: model.age,
           bodyType: model.body_type,
           heightCm: model.height_cm,
@@ -110,6 +111,7 @@ const Models = () => {
     name: string, 
     photos: string[], 
     description: {
+      gender: 'female' | 'male';
       age: number;
       bodyType: string;
       heightCm: number;
@@ -130,6 +132,7 @@ const Models = () => {
           modelName: name,
           photos,
           setActive: models.length === 0,
+          gender: description.gender,
           age: description.age,
           bodyType: description.bodyType,
           heightCm: description.heightCm,

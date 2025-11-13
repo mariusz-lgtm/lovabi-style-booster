@@ -4,6 +4,7 @@ export interface PredefinedModel {
   description: string;
   imageUrl: string;
   style: string;
+  gender: 'female' | 'male';
 }
 
 export interface CustomModel {
@@ -12,9 +13,10 @@ export interface CustomModel {
   photos: string[]; // Original photos - kept for regeneration
   generatedPortrait?: string; // AI-generated portrait (signed URL)
   createdAt: string;
+  gender: 'female' | 'male';
   // Physical description fields:
   age?: number;
-  bodyType?: 'petite' | 'slim' | 'athletic' | 'curvy' | 'plus-size';
+  bodyType?: string; // Dynamic based on gender
   heightCm?: number;
   skinTone?: 'fair' | 'light' | 'medium' | 'olive' | 'tan' | 'brown' | 'dark';
   hairDescription?: string;

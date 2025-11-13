@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload, Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import imageCompression from "browser-image-compression";
 import { CameraPreviewDialog } from "@/components/photo/CameraPreviewDialog";
@@ -14,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CustomModelCreatorProps {
   onSave: (name: string, photos: string[], description: {
+    gender: 'female' | 'male';
     age: number;
     bodyType: string;
     heightCm: number;
@@ -23,6 +25,9 @@ interface CustomModelCreatorProps {
   }) => void;
   onCancel: () => void;
 }
+
+const FEMALE_BODY_TYPES = ['petite', 'slim', 'athletic', 'curvy', 'plus-size'];
+const MALE_BODY_TYPES = ['slim', 'athletic', 'muscular', 'average', 'large'];
 
 const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
   const isMobile = useIsMobile();
@@ -34,12 +39,26 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
   const [cameraPreview, setCameraPreview] = useState<string | null>(null);
 
   // Physical description state
+  const [gender, setGender] = useState<'female' | 'male'>('female');
   const [age, setAge] = useState(25);
-  const [bodyType, setBodyType] = useState<'petite' | 'slim' | 'athletic' | 'curvy' | 'plus-size'>('slim');
+  const [bodyType, setBodyType] = useState<string>('slim');
   const [heightCm, setHeightCm] = useState(165);
   const [skinTone, setSkinTone] = useState<'fair' | 'light' | 'medium' | 'olive' | 'tan' | 'brown' | 'dark'>('medium');
   const [hairDescription, setHairDescription] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
+
+  const bodyTypes = gender === 'female' ? FEMALE_BODY_TYPES : MALE_BODY_TYPES;
+
+  // Update height default when gender changes
+  useEffect(() => {
+    if (gender === 'female') {
+      setHeightCm(165);
+    } else {
+      setHeightCm(180);
+    }
+    // Reset body type to first option when gender changes
+    setBodyType(bodyTypes[0]);
+  }, [gender]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -188,6 +207,7 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
     
     setIsGeneratingPortrait(true);
     onSave(name, photos, {
+      gender,
       age,
       bodyType,
       heightCm,
@@ -204,6 +224,17 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
       </h2>
 
       <div className="space-y-6">
+        {/* Gender Selection */}
+        <div>
+          <Label className="text-foreground mb-2">Gender</Label>
+          <Tabs value={gender} onValueChange={(val) => setGender(val as 'female' | 'male')}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="female">Female</TabsTrigger>
+              <TabsTrigger value="male">Male</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         {/* Name Input */}
         <div>
           <Label htmlFor="model-name" className="text-foreground mb-2">
@@ -240,16 +271,16 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
           {/* Body Type Dropdown */}
           <div className="mb-4">
             <Label className="text-foreground mb-2">Body Type</Label>
-            <Select value={bodyType} onValueChange={(value) => setBodyType(value as typeof bodyType)}>
+            <Select value={bodyType} onValueChange={(value) => setBodyType(value)}>
               <SelectTrigger className="bg-background border-border">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="petite">Petite</SelectItem>
-                <SelectItem value="slim">Slim</SelectItem>
-                <SelectItem value="athletic">Athletic</SelectItem>
-                <SelectItem value="curvy">Curvy</SelectItem>
-                <SelectItem value="plus-size">Plus-size</SelectItem>
+                {bodyTypes.map(type => (
+                  <SelectItem key={type} value={type}>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -260,11 +291,14 @@ const CustomModelCreator = ({ onSave, onCancel }: CustomModelCreatorProps) => {
             <Slider
               value={[heightCm]}
               onValueChange={(v) => setHeightCm(v[0])}
-              min={150}
-              max={200}
+              min={gender === 'female' ? 150 : 160}
+              max={gender === 'female' ? 190 : 210}
               step={1}
               className="mt-2"
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              {gender === 'female' ? '150-190 cm' : '160-210 cm'}
+            </p>
           </div>
           
           {/* Skin Tone Dropdown */}

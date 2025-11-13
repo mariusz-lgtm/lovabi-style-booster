@@ -26,7 +26,7 @@ serve(async (req) => {
 
     if (authError || !user) throw new Error('Unauthorized');
 
-    const { action, modelId, modelName, photos, setActive, age, bodyType, heightCm, skinTone, hairDescription, additionalNotes } = await req.json();
+    const { action, modelId, modelName, photos, setActive, gender, age, bodyType, heightCm, skinTone, hairDescription, additionalNotes } = await req.json();
 
     switch (action) {
       case 'create': {
@@ -43,6 +43,7 @@ serve(async (req) => {
             user_id: user.id,
             name: modelName,
             is_active: setActive || false,
+            gender: gender || 'female',
             age,
             body_type: bodyType,
             height_cm: heightCm,
@@ -84,7 +85,11 @@ serve(async (req) => {
         console.log('Original photos uploaded, generating AI portrait...');
 
         // Step 3: Generate AI portrait using Lovable AI
-        const portraitPrompt = `Generate a professional studio portrait (headshot and upper body) of a woman based on the provided reference images and description.
+        const genderTerm = gender === 'male' ? 'man' : 'woman';
+        const pronounSubject = gender === 'male' ? 'him' : 'her';
+        const attire = gender === 'male' ? 'Smart casual or business attire (shirt/polo or blazer)' : 'Professional or elegant attire';
+        
+        const portraitPrompt = `Generate a professional studio portrait (headshot and upper body) of a ${genderTerm} based on the provided reference images and description.
 
 CRITICAL: Output MUST be perfect square format — 1:1 aspect ratio, 1536×1536 pixels. Non-negotiable.
 
@@ -94,6 +99,7 @@ Reference Images Analysis:
 - Replicate skin tone, complexion, and any distinctive features faithfully
 
 Physical Description to Match:
+- Gender: ${gender}
 - Age: ${age} years old
 - Body Type: ${bodyType} — maintain this exact body type and build
 - Height: ${heightCm}cm — ensure proportions match this height
@@ -108,9 +114,9 @@ Portrait Specifications:
 - Camera: Full-frame DSLR, 50mm lens, f/2.8 (suitable for full-body portraits)
 - Composition: Full body visible (head to feet), standing pose, centered framing
 - Show complete body proportions from head to toes
-- Model standing naturally with full outfit visible
+- ${gender === 'male' ? 'Male model standing naturally with confident posture' : 'Female model standing naturally with elegant posture'}
 - Expression: Natural, confident, friendly — suitable for fashion modeling
-- Clothing: Simple, elegant full outfit in neutral colors (white, black, beige) — top and pants/skirt
+- Clothing: ${attire} in neutral colors (white, black, beige, navy)
 - Entire outfit should be visible to show body proportions accurately
 - Styling: Professional but approachable — suitable for e-commerce fashion photography
 

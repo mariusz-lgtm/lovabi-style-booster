@@ -2,6 +2,9 @@ import { PredefinedModel, CustomModel, ModelPreferences } from "@/types/models";
 import emmaImage from "@/assets/model-emma.jpg";
 import sofiaImage from "@/assets/model-sofia.jpg";
 import mayaImage from "@/assets/model-maya.jpg";
+import marcusImage from "@/assets/model-marcus.jpg";
+import jakeImage from "@/assets/model-jake.jpg";
+import leoImage from "@/assets/model-leo.jpg";
 
 export const PREDEFINED_MODELS: PredefinedModel[] = [
   {
@@ -9,22 +12,57 @@ export const PREDEFINED_MODELS: PredefinedModel[] = [
     name: "Emma",
     description: "Professional European model",
     imageUrl: emmaImage,
-    style: "elegant"
+    style: "elegant",
+    gender: "female"
   },
   {
     id: "sofia",
     name: "Sofia",
     description: "Modern Mediterranean model",
     imageUrl: sofiaImage,
-    style: "contemporary"
+    style: "contemporary",
+    gender: "female"
   },
   {
     id: "maya",
     name: "Maya",
     description: "Trendy street style model",
     imageUrl: mayaImage,
-    style: "casual"
+    style: "casual",
+    gender: "female"
   }
+];
+
+export const PREDEFINED_MALE_MODELS: PredefinedModel[] = [
+  {
+    id: "marcus",
+    name: "Marcus",
+    description: "Professional Business Style",
+    imageUrl: marcusImage,
+    style: "professional",
+    gender: "male"
+  },
+  {
+    id: "jake",
+    name: "Jake",
+    description: "Casual Urban Style",
+    imageUrl: jakeImage,
+    style: "urban",
+    gender: "male"
+  },
+  {
+    id: "leo",
+    name: "Leo",
+    description: "Athletic Sporty Style",
+    imageUrl: leoImage,
+    style: "athletic",
+    gender: "male"
+  }
+];
+
+export const ALL_PREDEFINED_MODELS = [
+  ...PREDEFINED_MODELS,
+  ...PREDEFINED_MALE_MODELS
 ];
 
 const STORAGE_KEYS = {
