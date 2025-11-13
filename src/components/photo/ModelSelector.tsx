@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PREDEFINED_MODELS } from "@/lib/mockModels";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ALL_PREDEFINED_MODELS } from "@/lib/mockModels";
 import { CustomModel } from "@/types/models";
 import CustomModelCard from "./CustomModelCard";
 
@@ -14,17 +16,38 @@ interface ModelSelectorProps {
 }
 
 const ModelSelector = ({ selectedModelId, onModelSelect, customModels }: ModelSelectorProps) => {
+  const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
+
+  const filteredPredefinedModels = ALL_PREDEFINED_MODELS.filter(
+    m => genderFilter === 'all' || m.gender === genderFilter
+  );
+
+  const filteredCustomModels = customModels.filter(
+    m => genderFilter === 'all' || m.gender === genderFilter
+  );
+
   return (
     <Card className="p-6 bg-card">
-      <h3 className="text-lg font-heading font-semibold text-foreground mb-4">
-        Choose Your Model
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-heading font-semibold text-foreground">
+          Choose Your Model
+        </h3>
+        
+        {/* Gender Filter Tabs */}
+        <Tabs value={genderFilter} onValueChange={(val) => setGenderFilter(val as 'all' | 'female' | 'male')}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="female">Female</TabsTrigger>
+            <TabsTrigger value="male">Male</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
       
       {/* Predefined Models */}
       <div className="mb-6">
         <p className="text-sm text-foreground-secondary mb-3">Predefined Models</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {PREDEFINED_MODELS.map((model) => (
+          {filteredPredefinedModels.map((model) => (
             <Card
               key={model.id}
               onClick={() => onModelSelect(model.id)}
@@ -58,11 +81,11 @@ const ModelSelector = ({ selectedModelId, onModelSelect, customModels }: ModelSe
       </div>
 
       {/* Custom Models */}
-      {customModels.length > 0 && (
+      {filteredCustomModels.length > 0 && (
         <div className="mb-4">
           <p className="text-sm text-foreground-secondary mb-3">Your Custom Models</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {customModels.map((model) => (
+            {filteredCustomModels.map((model) => (
               <CustomModelCard
                 key={model.id}
                 model={model}

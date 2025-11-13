@@ -98,7 +98,8 @@ const PhotoEnhance = () => {
           name: model.name,
           photos: photoUrls.filter(url => url !== ''),
           generatedPortrait,
-          createdAt: model.created_at
+          createdAt: model.created_at,
+          gender: (model.gender || 'female') as 'female' | 'male'
         };
       })
     );

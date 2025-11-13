@@ -34,9 +34,12 @@ const CustomModelCard = ({ model, isSelected, onSelect }: CustomModelCardProps) 
       
       <div className="space-y-1">
         <p className="font-heading font-semibold text-foreground">{model.name}</p>
-        <Badge variant="secondary" className="text-xs">
-          {model.photos.length} photo{model.photos.length > 1 ? "s" : ""}
-        </Badge>
+  <Badge variant="secondary" className="text-xs">
+    {model.photos.length} photo{model.photos.length > 1 ? "s" : ""}
+  </Badge>
+  <Badge variant="outline" className="text-xs">
+    {model.gender === 'male' ? 'Male' : 'Female'}
+  </Badge>
       </div>
     </Card>
   );
