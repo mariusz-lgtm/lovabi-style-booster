@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@4.0.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const resetSchema = z.object({
   email: z.string().trim().email("Invalid email address").max(255, "Email too long"),
@@ -41,6 +38,12 @@ serve(async (req: Request) => {
 
     const { email, resetLink, verificationCode } = parsed.data;
     console.log(`Sending password reset email to: ${email}`);
+
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("RESEND_API_KEY is not set");
+      throw new Error("RESEND_API_KEY environment variable is required");
+    }
 
     // Create HTML email template
     const html = `
@@ -114,20 +117,29 @@ serve(async (req: Request) => {
 </html>
     `;
 
-    // Send email via Resend
-    const { data, error } = await resend.emails.send({
-      from: "PhotoApp <noreply@resend.dev>",
-      to: [email],
-      subject: "Zresetuj hasło w PhotoApp 🔒",
-      html,
+    // Send email via Resend using fetch API directly
+    const resendResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "PhotoApp <noreply@resend.dev>",
+        to: [email],
+        subject: "Zresetuj hasło w PhotoApp 🔒",
+        html,
+      }),
     });
 
-    if (error) {
-      console.error("Resend API error:", error);
-      throw error;
+    if (!resendResponse.ok) {
+      const errorText = await resendResponse.text();
+      console.error("Resend API error:", resendResponse.status, errorText);
+      throw new Error(`Resend API error: ${resendResponse.status} - ${errorText}`);
     }
 
-    console.log("Password reset email sent successfully:", data?.id);
+    const data = await resendResponse.json();
+    console.log("Password reset email sent successfully:", data);
 
     return new Response(
       JSON.stringify({ 
