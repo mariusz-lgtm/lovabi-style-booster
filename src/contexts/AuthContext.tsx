@@ -66,7 +66,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.log('Sign out error (will clear locally):', error);
+    } finally {
+      // Always clear local state regardless of server response
+      await supabase.auth.signOut({ scope: 'local' });
+      setSession(null);
+      setUser(null);
+    }
   };
 
   const updatePassword = async (newPassword: string) => {

@@ -30,11 +30,11 @@ const AccountSection = () => {
       
       await signOut();
       toast.success('Account deleted successfully');
-      navigate('/');
     } catch (error: any) {
       toast.error('Failed to delete account: ' + error.message);
     } finally {
       setDeleting(false);
+      navigate('/');
     }
   };
 

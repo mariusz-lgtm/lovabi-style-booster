@@ -231,8 +231,14 @@ const PhotoEnhance = () => {
   };
 
   const handleProcess = async () => {
-    if (!selectedImage || !session) {
-      toast.error('Please select an image and make sure you are logged in');
+    if (!selectedImage) {
+      toast.error('Please select an image first');
+      return;
+    }
+
+    if (!session?.access_token) {
+      toast.error('Session expired. Please log in again.');
+      navigate('/auth');
       return;
     }
 
@@ -287,10 +293,21 @@ const PhotoEnhance = () => {
           modelGender: calculatedGender,
           photoStyle: mode === 'virtual-tryon' ? photoStyle : undefined,
           backgroundType: mode === 'virtual-tryon' ? backgroundType : undefined
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        const errorMessage = error.message || 'Failed to process image';
+        if (errorMessage.toLowerCase().includes('unauthorized') || errorMessage.includes('401')) {
+          toast.error('Session expired. Please log in again.');
+          navigate('/auth');
+          return;
+        }
+        throw error;
+      }
 
       setEnhancedImage(data.imageUrl);
       
