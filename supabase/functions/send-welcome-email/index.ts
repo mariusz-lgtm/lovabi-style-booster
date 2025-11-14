@@ -38,13 +38,21 @@ serve(async (req: Request) => {
     const { email, fullName } = parsed.data;
     console.log(`Sending welcome email to: ${email}`);
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const rawApiKey = Deno.env.get("RESEND_API_KEY");
+    const resendApiKey = rawApiKey?.trim();
+
     if (!resendApiKey) {
       console.error("RESEND_API_KEY is not set");
       throw new Error("RESEND_API_KEY environment variable is required");
     }
-    
-    console.log("Resend API key found, length:", resendApiKey.length);
+
+    // Disallow CR/LF and non-printable ASCII to avoid invalid ByteString in headers
+    if (["\r", "\n"].some((c) => resendApiKey.includes(c)) || !/^[\x20-\x7E]+$/.test(resendApiKey)) {
+      console.error("RESEND_API_KEY contains invalid characters");
+      throw new Error("RESEND_API_KEY contains invalid characters; please regenerate and re-add the key");
+    }
+
+    console.log("Resend API key validated, length:", resendApiKey.length);
 
     // Create HTML email template
     const html = `
@@ -102,10 +110,10 @@ serve(async (req: Request) => {
     console.log("Sending email via Resend API...");
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: {
+      headers: new Headers({
         "Authorization": `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
-      },
+      }),
       body: JSON.stringify({
         from: "PhotoApp <noreply@resend.dev>",
         to: [email],
