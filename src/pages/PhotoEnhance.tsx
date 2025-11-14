@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Upload, Camera, Sparkles, Download, RotateCcw, Coins, Image as ImageIcon, Share2 } from "lucide-react";
+import { Upload, Camera, Sparkles, Download, RotateCcw, Coins, Image as ImageIcon } from "lucide-react";
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Media } from '@capacitor-community/media';
@@ -31,14 +31,6 @@ const PhotoEnhance = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
-  const canUseWebShare = () => {
-    return (
-      typeof navigator !== 'undefined' &&
-      'share' in navigator &&
-      'canShare' in navigator
-    );
-  };
   
   const [isDragging, setIsDragging] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -350,51 +342,6 @@ const PhotoEnhance = () => {
     toast.success('Image downloaded successfully!');
   };
 
-  const handleSharePhoto = async () => {
-    if (!enhancedImage) return;
-    
-    try {
-      toast.info('Preparing to share...');
-      
-      // Fetch image and convert to blob
-      const response = await fetch(enhancedImage);
-      const blob = await response.blob();
-      
-      // Create file from blob
-      const file = new File(
-        [blob], 
-        `lovabi-${mode}-${Date.now()}.png`, 
-        { type: 'image/png' }
-      );
-      
-      const shareData = {
-        files: [file],
-        title: mode === 'enhance' ? 'Enhanced Photo' : 'Virtual Try-On',
-        text: `Check out my ${mode === 'enhance' ? 'enhanced photo' : 'virtual try-on'}!`
-      };
-      
-      // Check if the data can be shared
-      if (navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-        toast.success('Photo shared successfully! 🎉');
-      } else {
-        // Fallback to download if sharing not supported for this file type
-        toast.info('Sharing not available, downloading instead...');
-        handleDownload();
-      }
-    } catch (err: any) {
-      // User cancelled the share
-      if (err.name === 'AbortError') {
-        console.log('Share cancelled by user');
-        return;
-      }
-      
-      console.error('Error sharing:', err);
-      toast.error('Failed to share. Downloading instead...');
-      handleDownload();
-    }
-  };
-
   const blobToBase64 = (blob: Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -634,50 +581,25 @@ const PhotoEnhance = () => {
                       <Sparkles className="w-5 h-5" />
                       Generate Again
                     </Button>
-                      {(() => {
-                        const platform = Capacitor.getPlatform();
-                        const isNativeApp = platform === 'ios' || platform === 'android';
-                        
-                        console.log('Platform:', platform, 'isMobile:', isMobile, 'canUseWebShare:', canUseWebShare());
-                        
-                        if (isNativeApp) {
-                          // Native app: Save to Gallery
-                          return (
-                            <Button
-                              onClick={handleSaveToGallery}
-                              size="lg"
-                              className="w-full sm:w-auto gap-2"
-                            >
-                              <ImageIcon className="w-5 h-5" />
-                              Save to Gallery
-                            </Button>
-                          );
-                        } else if (!isNativeApp && canUseWebShare()) {
-                          // Mobile browser with Web Share API: Share
-                          return (
-                            <Button
-                              onClick={handleSharePhoto}
-                              size="lg"
-                              className="w-full sm:w-auto gap-2"
-                            >
-                              <Share2 className="w-5 h-5" />
-                              Share Photo
-                            </Button>
-                          );
-                        } else {
-                          // Desktop or browsers without Web Share: Download
-                          return (
-                            <Button
-                              onClick={handleDownload}
-                              size="lg"
-                              className="w-full sm:w-auto gap-2"
-                            >
-                              <Download className="w-5 h-5" />
-                              Download
-                            </Button>
-                          );
-                        }
-                      })()}
+                    {isMobile ? (
+                      <Button
+                        onClick={handleSaveToGallery}
+                        size="lg"
+                        className="w-full sm:w-auto gap-2"
+                      >
+                        <ImageIcon className="w-5 h-5" />
+                        Save to Gallery
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleDownload}
+                        size="lg"
+                        className="w-full sm:w-auto gap-2"
+                      >
+                        <Download className="w-5 h-5" />
+                        Download
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
