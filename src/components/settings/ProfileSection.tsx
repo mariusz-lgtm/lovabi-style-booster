@@ -155,7 +155,7 @@ const ProfileSection = () => {
           </Select>
         </div>
 
-        <Button onClick={handleSave} disabled={loading}>
+        <Button onClick={handleSave} disabled={loading} size="lg">
           {loading ? 'Saving...' : 'Save Changes'}
         </Button>
       </CardContent>

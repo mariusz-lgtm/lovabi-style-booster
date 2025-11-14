@@ -403,19 +403,19 @@ const PhotoEnhance = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-6 lg:px-8 py-12">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl lg:text-5xl font-bold font-heading text-foreground mb-4">
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold font-heading text-foreground mb-3 sm:mb-4">
               {mode === "enhance" ? "Enhance Your Photos" : "Dress on Model"}
             </h1>
-            <p className="text-lg text-foreground-secondary mb-6">
+            <p className="text-base sm:text-lg text-foreground-secondary mb-4 sm:mb-6 px-4">
               {mode === "enhance" 
                 ? "Upload your fashion item and we'll make it shine"
                 : "See how your item looks on a professional model"}
             </p>
             {!selectedImage && (
-              <div className="max-w-md mx-auto">
+              <div className="max-w-md mx-auto px-4">
                 <ModeSelector mode={mode} onModeChange={setMode} />
               </div>
             )}
@@ -432,7 +432,7 @@ const PhotoEnhance = () => {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <div className="p-16">
+              <div className="p-8 sm:p-12 lg:p-16">
                 <input
                   id="file-input"
                   type="file"
@@ -450,12 +450,12 @@ const PhotoEnhance = () => {
                 />
                 
                 <div className="flex flex-col items-center justify-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
-                    <Upload className="w-8 h-8 text-primary" />
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-secondary flex items-center justify-center">
+                    <Upload className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
                   </div>
                   
                   <div className="text-center">
-                    <p className="text-lg font-medium text-foreground mb-4">
+                    <p className="text-base sm:text-lg font-medium text-foreground mb-4">
                       Upload or capture your photo
                     </p>
                     
@@ -463,8 +463,9 @@ const PhotoEnhance = () => {
                       <Button
                         type="button"
                         variant="outline"
+                        size="lg"
                         onClick={() => document.getElementById('file-input')?.click()}
-                        className="gap-2"
+                        className="w-full sm:w-auto gap-2"
                       >
                         <Upload className="w-4 h-4" />
                         Browse Files
@@ -474,8 +475,9 @@ const PhotoEnhance = () => {
                         <Button
                           type="button"
                           variant="default"
+                          size="lg"
                           onClick={() => document.getElementById('camera-input')?.click()}
-                          className="gap-2"
+                          className="w-full sm:w-auto gap-2"
                         >
                           <Camera className="w-4 h-4" />
                           Take Photo
@@ -491,9 +493,9 @@ const PhotoEnhance = () => {
               </div>
             </Card>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Mode selector when image is selected */}
-              <div className="max-w-md mx-auto mb-6">
+              <div className="max-w-md mx-auto mb-4 sm:mb-6 px-4">
                 <ModeSelector mode={mode} onModeChange={setMode} />
               </div>
 
@@ -541,7 +543,7 @@ const PhotoEnhance = () => {
                       onClick={handleProcess}
                       size="lg"
                       disabled={isLoading}
-                      className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-105"
+                      className="w-full sm:w-auto gap-2"
                     >
                       <Sparkles className="w-5 h-5" />
                       {mode === "enhance" ? "Enhance Photo" : "Dress on Model"}
@@ -554,7 +556,7 @@ const PhotoEnhance = () => {
                       variant="outline"
                       size="lg"
                       disabled={isLoading}
-                      className="border-border hover:bg-secondary"
+                      className="w-full sm:w-auto"
                     >
                       Choose Different Photo
                     </Button>
@@ -565,7 +567,7 @@ const PhotoEnhance = () => {
                       onClick={handleReset}
                       size="lg"
                       variant="outline"
-                      className="gap-2 border-border hover:bg-secondary"
+                      className="w-full sm:w-auto gap-2"
                     >
                       <RotateCcw className="w-5 h-5" />
                       Start Over
@@ -574,7 +576,7 @@ const PhotoEnhance = () => {
                       onClick={handleProcess}
                       size="lg"
                       variant="outline"
-                      className="gap-2 border-border hover:bg-secondary"
+                      className="w-full sm:w-auto gap-2"
                     >
                       <Sparkles className="w-5 h-5" />
                       Generate Again
@@ -583,7 +585,7 @@ const PhotoEnhance = () => {
                       <Button
                         onClick={handleSaveToGallery}
                         size="lg"
-                        className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-105"
+                        className="w-full sm:w-auto gap-2"
                       >
                         <ImageIcon className="w-5 h-5" />
                         Save to Gallery
@@ -592,7 +594,7 @@ const PhotoEnhance = () => {
                       <Button
                         onClick={handleDownload}
                         size="lg"
-                        className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-105"
+                        className="w-full sm:w-auto gap-2"
                       >
                         <Download className="w-5 h-5" />
                         Download

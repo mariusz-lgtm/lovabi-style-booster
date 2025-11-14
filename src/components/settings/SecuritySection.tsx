@@ -67,7 +67,7 @@ const SecuritySection = () => {
           />
         </div>
 
-        <Button onClick={handleChangePassword} disabled={loading}>
+        <Button onClick={handleChangePassword} disabled={loading} size="lg">
           {loading ? 'Changing...' : 'Change Password'}
         </Button>
       </CardContent>

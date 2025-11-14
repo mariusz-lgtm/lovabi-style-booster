@@ -22,7 +22,7 @@ const PhotoStyleSelector = ({ selectedStyle, onStyleChange }: PhotoStyleSelector
       >
         <Label
           htmlFor="selfie"
-          className={`flex flex-col items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+          className={`flex flex-col items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 touch-manipulation select-none active:scale-95 min-h-[120px] ${
             selectedStyle === "selfie"
               ? "border-primary bg-secondary/50"
               : "border-border hover:border-primary/50 hover:bg-secondary/30"
@@ -40,7 +40,7 @@ const PhotoStyleSelector = ({ selectedStyle, onStyleChange }: PhotoStyleSelector
 
         <Label
           htmlFor="studio"
-          className={`flex flex-col items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+          className={`flex flex-col items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 touch-manipulation select-none active:scale-95 min-h-[120px] ${
             selectedStyle === "studio"
               ? "border-primary bg-secondary/50"
               : "border-border hover:border-primary/50 hover:bg-secondary/30"

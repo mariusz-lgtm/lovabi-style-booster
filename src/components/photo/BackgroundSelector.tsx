@@ -60,7 +60,7 @@ const BackgroundSelector = ({ selectedBackground, onBackgroundChange }: Backgrou
               />
               <Label
                 htmlFor={bg.id}
-                className="flex flex-col items-start gap-2 p-4 rounded-lg border-2 border-border bg-background cursor-pointer transition-all hover:border-primary/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                className="flex flex-col items-start gap-2 p-4 rounded-lg border-2 border-border bg-background cursor-pointer transition-all hover:border-primary/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 touch-manipulation select-none active:scale-95 min-h-[88px]"
               >
                 <div className="flex items-center gap-2 w-full">
                   <Icon className="w-5 h-5 text-primary" />
