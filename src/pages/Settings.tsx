@@ -21,14 +21,28 @@ const Settings = () => {
           </p>
 
           <Tabs defaultValue="profile" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="security">Security</TabsTrigger>
-              <TabsTrigger value="plan">Plan</TabsTrigger>
-              <TabsTrigger value="transactions">Transactions</TabsTrigger>
-              <TabsTrigger value="cookies">Cookies</TabsTrigger>
-              <TabsTrigger value="account">Account</TabsTrigger>
-            </TabsList>
+            <div className="w-full overflow-x-auto">
+              <TabsList className="inline-flex min-w-full md:grid md:grid-cols-6 w-full">
+                <TabsTrigger value="profile" className="flex-shrink-0 min-w-[100px] md:min-w-0">
+                  Profile
+                </TabsTrigger>
+                <TabsTrigger value="security" className="flex-shrink-0 min-w-[100px] md:min-w-0">
+                  Security
+                </TabsTrigger>
+                <TabsTrigger value="plan" className="flex-shrink-0 min-w-[100px] md:min-w-0">
+                  Plan
+                </TabsTrigger>
+                <TabsTrigger value="transactions" className="flex-shrink-0 min-w-[120px] md:min-w-0">
+                  Transactions
+                </TabsTrigger>
+                <TabsTrigger value="cookies" className="flex-shrink-0 min-w-[100px] md:min-w-0">
+                  Cookies
+                </TabsTrigger>
+                <TabsTrigger value="account" className="flex-shrink-0 min-w-[100px] md:min-w-0">
+                  Account
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="profile">
               <ProfileSection />

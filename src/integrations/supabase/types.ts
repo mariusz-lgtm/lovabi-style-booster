@@ -200,6 +200,7 @@ export type Database = {
           age: number | null
           body_type: string | null
           created_at: string | null
+          gender: string
           generated_portrait_path: string | null
           hair_description: string | null
           height_cm: number | null
@@ -214,6 +215,7 @@ export type Database = {
           age?: number | null
           body_type?: string | null
           created_at?: string | null
+          gender?: string
           generated_portrait_path?: string | null
           hair_description?: string | null
           height_cm?: number | null
@@ -228,6 +230,7 @@ export type Database = {
           age?: number | null
           body_type?: string | null
           created_at?: string | null
+          gender?: string
           generated_portrait_path?: string | null
           hair_description?: string | null
           height_cm?: number | null
