@@ -39,10 +39,18 @@ serve(async (req: Request) => {
     const { email, resetLink, verificationCode } = parsed.data;
     console.log(`Sending password reset email to: ${email}`);
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const rawApiKey = Deno.env.get("RESEND_API_KEY");
+    const resendApiKey = rawApiKey?.trim();
+
     if (!resendApiKey) {
       console.error("RESEND_API_KEY is not set");
       throw new Error("RESEND_API_KEY environment variable is required");
+    }
+
+    // Disallow CR/LF and non-printable ASCII to avoid invalid ByteString in headers
+    if (["\r", "\n"].some((c) => resendApiKey.includes(c)) || !/^[\x20-\x7E]+$/.test(resendApiKey)) {
+      console.error("RESEND_API_KEY contains invalid characters");
+      throw new Error("RESEND_API_KEY contains invalid characters; please regenerate and re-add the key");
     }
 
     // Create HTML email template
@@ -120,10 +128,10 @@ serve(async (req: Request) => {
     // Send email via Resend using fetch API directly
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: {
+      headers: new Headers({
         "Authorization": `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
-      },
+      }),
       body: JSON.stringify({
         from: "PhotoApp <noreply@resend.dev>",
         to: [email],
