@@ -46,12 +46,12 @@ const ModelSelector = ({ selectedModelId, onModelSelect, customModels }: ModelSe
       {/* Predefined Models */}
       <div className="mb-6">
         <p className="text-sm text-foreground-secondary mb-3">Predefined Models</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredPredefinedModels.map((model) => (
             <Card
               key={model.id}
               onClick={() => onModelSelect(model.id)}
-              className={`relative p-4 cursor-pointer transition-all duration-200 hover:scale-105 ${
+              className={`relative p-4 cursor-pointer transition-all duration-200 hover:scale-[1.02] touch-manipulation select-none active:scale-95 ${
                 selectedModelId === model.id
                   ? "border-2 border-primary bg-secondary/50 shadow-lg"
                   : "border-2 border-border hover:border-primary/50"
@@ -84,7 +84,7 @@ const ModelSelector = ({ selectedModelId, onModelSelect, customModels }: ModelSe
       {filteredCustomModels.length > 0 && (
         <div className="mb-4">
           <p className="text-sm text-foreground-secondary mb-3">Your Custom Models</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredCustomModels.map((model) => (
               <CustomModelCard
                 key={model.id}

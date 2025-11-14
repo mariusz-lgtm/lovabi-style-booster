@@ -21,31 +21,31 @@ const Index = () => {
       
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="container mx-auto px-6 lg:px-8 py-20 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h1 className="text-5xl lg:text-6xl font-bold font-heading text-foreground leading-tight">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div className="space-y-6 sm:space-y-8">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold font-heading text-foreground leading-tight">
                 Turn Your Closet Into a{" "}
                 <span className="text-primary">Boutique</span>
               </h1>
-              <p className="text-xl text-foreground-secondary leading-relaxed">
+              <p className="text-base sm:text-lg lg:text-xl text-foreground-secondary leading-relaxed">
                 Professional photos and perfect listings for your Vinted shop. No experience needed—just upload and let AI handle the rest.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to={user ? "/enhance" : "/auth"}>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Link to={user ? "/enhance" : "/auth"} className="w-full sm:w-auto">
                   <Button 
                     size="lg" 
-                    className="gap-2 bg-primary hover:bg-primary-hover text-primary-foreground transition-all hover:scale-105 shadow-medium"
+                    className="w-full sm:w-auto gap-2 bg-primary hover:bg-primary-hover text-primary-foreground shadow-medium"
                   >
                     <ImagePlus className="w-5 h-5" />
                     Enhance Photo
                   </Button>
                 </Link>
-                <Link to={user ? "/listing" : "/auth"}>
+                <Link to={user ? "/listing" : "/auth"} className="w-full sm:w-auto">
                   <Button 
                     variant="outline" 
                     size="lg"
-                    className="gap-2 border-border hover:bg-secondary transition-all hover:scale-105"
+                    className="w-full sm:w-auto gap-2 border-border hover:bg-secondary"
                   >
                     <FileText className="w-5 h-5" />
                     Generate Listing
@@ -68,13 +68,13 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="bg-secondary py-20">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold font-heading text-foreground mb-4">
+      <section className="bg-secondary py-12 sm:py-16 lg:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-12 lg:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-heading text-foreground mb-3 sm:mb-4">
               Everything You Need to Sell Better
             </h2>
-            <p className="text-lg text-foreground-secondary max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-foreground-secondary max-w-2xl mx-auto px-4">
               Professional tools designed for fashion resellers who want to stand out
             </p>
           </div>

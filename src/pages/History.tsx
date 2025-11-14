@@ -123,18 +123,18 @@ const History = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold text-foreground mb-2">
             Generation History
           </h1>
-          <p className="text-foreground-secondary">
+          <p className="text-sm sm:text-base text-foreground-secondary">
             View and download all your AI-generated photos
           </p>
         </div>
 
         {isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[1, 2, 3].map((i) => (
               <Card key={i} className="overflow-hidden">
                 <div className="aspect-square bg-muted animate-pulse" />
@@ -155,16 +155,16 @@ const History = () => {
         )}
 
         {!isLoading && history.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <ImagePlus className="w-16 h-16 text-foreground-secondary/50 mb-4" />
-            <h3 className="text-xl font-heading font-semibold text-foreground mb-2">
+          <div className="flex flex-col items-center justify-center py-12 sm:py-20 text-center">
+            <ImagePlus className="w-12 h-12 sm:w-16 sm:h-16 text-foreground-secondary/50 mb-4" />
+            <h3 className="text-lg sm:text-xl font-heading font-semibold text-foreground mb-2">
               No generations yet
             </h3>
-            <p className="text-foreground-secondary mb-6 max-w-md">
+            <p className="text-sm sm:text-base text-foreground-secondary mb-6 max-w-md px-4">
               Start by enhancing your first photo or trying virtual try-on with your items.
             </p>
             <Link to="/enhance">
-              <Button>
+              <Button size="lg">
                 <ImagePlus className="w-4 h-4 mr-2" />
                 Start Creating
               </Button>
@@ -173,7 +173,7 @@ const History = () => {
         )}
 
         {!isLoading && history.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {history.map((item: any) => {
               const imageUrl = item.imageUrl as string | null;
 

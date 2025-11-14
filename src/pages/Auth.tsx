@@ -120,6 +120,7 @@ const Auth = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="twoj@email.com"
                 required
+                autoComplete="email"
               />
             </div>
 
@@ -133,6 +134,7 @@ const Auth = () => {
                 placeholder="••••••••"
                 required
                 minLength={6}
+                autoComplete={isLogin ? "current-password" : "new-password"}
               />
             </div>
 
@@ -162,7 +164,7 @@ const Auth = () => {
               </Button>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading ? 'Przetwarzanie...' : (isLogin ? 'Zaloguj się' : 'Utwórz konto')}
             </Button>
 
@@ -203,7 +205,7 @@ const Auth = () => {
                 placeholder="twoj@email.com"
               />
             </div>
-            <Button onClick={handleResetPassword} disabled={resetLoading} className="w-full">
+            <Button onClick={handleResetPassword} disabled={resetLoading} className="w-full" size="lg">
               {resetLoading ? 'Wysyłanie...' : 'Wyślij link resetujący'}
             </Button>
           </div>

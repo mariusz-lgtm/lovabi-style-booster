@@ -61,9 +61,9 @@ const AccountSection = () => {
             Once you delete your account, there is no going back. All your data, models, and history will be permanently deleted.
           </p>
           
-          <AlertDialog>
+            <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" disabled={deleting}>
+              <Button variant="destructive" disabled={deleting} size="lg">
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete Account
               </Button>
