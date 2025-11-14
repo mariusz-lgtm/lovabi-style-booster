@@ -634,49 +634,50 @@ const PhotoEnhance = () => {
                       <Sparkles className="w-5 h-5" />
                       Generate Again
                     </Button>
-                    {(() => {
-                      const platform = Capacitor.getPlatform();
-                      const isNativeApp = platform === 'ios' || platform === 'android';
-                      const isWebShareAvailable = !isNativeApp && isMobile && canUseWebShare();
-                      
-                      if (isNativeApp) {
-                        // Native app: Save to Gallery
-                        return (
-                          <Button
-                            onClick={handleSaveToGallery}
-                            size="lg"
-                            className="w-full sm:w-auto gap-2"
-                          >
-                            <ImageIcon className="w-5 h-5" />
-                            Save to Gallery
-                          </Button>
-                        );
-                      } else if (isWebShareAvailable) {
-                        // Mobile browser with Web Share API: Share
-                        return (
-                          <Button
-                            onClick={handleSharePhoto}
-                            size="lg"
-                            className="w-full sm:w-auto gap-2"
-                          >
-                            <Share2 className="w-5 h-5" />
-                            Share Photo
-                          </Button>
-                        );
-                      } else {
-                        // Desktop or browsers without Web Share: Download
-                        return (
-                          <Button
-                            onClick={handleDownload}
-                            size="lg"
-                            className="w-full sm:w-auto gap-2"
-                          >
-                            <Download className="w-5 h-5" />
-                            Download
-                          </Button>
-                        );
-                      }
-                    })()}
+                      {(() => {
+                        const platform = Capacitor.getPlatform();
+                        const isNativeApp = platform === 'ios' || platform === 'android';
+                        
+                        console.log('Platform:', platform, 'isMobile:', isMobile, 'canUseWebShare:', canUseWebShare());
+                        
+                        if (isNativeApp) {
+                          // Native app: Save to Gallery
+                          return (
+                            <Button
+                              onClick={handleSaveToGallery}
+                              size="lg"
+                              className="w-full sm:w-auto gap-2"
+                            >
+                              <ImageIcon className="w-5 h-5" />
+                              Save to Gallery
+                            </Button>
+                          );
+                        } else if (!isNativeApp && canUseWebShare()) {
+                          // Mobile browser with Web Share API: Share
+                          return (
+                            <Button
+                              onClick={handleSharePhoto}
+                              size="lg"
+                              className="w-full sm:w-auto gap-2"
+                            >
+                              <Share2 className="w-5 h-5" />
+                              Share Photo
+                            </Button>
+                          );
+                        } else {
+                          // Desktop or browsers without Web Share: Download
+                          return (
+                            <Button
+                              onClick={handleDownload}
+                              size="lg"
+                              className="w-full sm:w-auto gap-2"
+                            >
+                              <Download className="w-5 h-5" />
+                              Download
+                            </Button>
+                          );
+                        }
+                      })()}
                   </>
                 )}
               </div>
