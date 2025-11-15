@@ -55,22 +55,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
     
-    // Send welcome email after successful signup
-    if (!error) {
-      try {
-        await supabase.functions.invoke('send-welcome-email', {
-          body: { 
-            email, 
-            fullName: fullName || 'Użytkowniku' 
-          }
-        });
-        console.log('Welcome email sent successfully');
-      } catch (emailError) {
-        // Don't block signup flow if email fails
-        console.warn('Failed to send welcome email:', emailError);
-      }
-    }
-    
     return { error };
   };
 
