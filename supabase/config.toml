@@ -1,5 +1,12 @@
 project_id = "revgpspqpkjncosctnxo"
 
+[auth.hook.send_email]
+enabled = true
+uri = "https://revgpspqpkjncosctnxo.supabase.co/functions/v1/auth-email-handler"
+
+[functions.auth-email-handler]
+verify_jwt = false
+
 [functions.generate-photo-enhancement]
 verify_jwt = true
 
